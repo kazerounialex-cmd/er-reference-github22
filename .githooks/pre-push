@@ -1,0 +1,5 @@
+#!/bin/sh
+# A failing calculation or regression check prevents this push.
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+exec node scripts/check-all.cjs

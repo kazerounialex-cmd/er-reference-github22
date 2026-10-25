@@ -30,7 +30,7 @@ if(typeof document!=='undefined')(()=>{
  $('criPrintButton').disabled=true;['criPrintMeta','criPrintMix','criPrintRate','criPrintFormula'].forEach(id=>$(id).textContent='');$('criPrintTable').innerHTML='';
  try{
  const fields=['criStock','criDose','fentHours','fentCapacity','fentPump','fentVolume','fentConcentration','prepHours','prepPump','prepCapacity','insHours','insPump','insCapacity','insDose',...['r12','r6','rBag'].flatMap(m=>['Dose','Pump','Hours','Capacity','Volume'].map(k=>m+k))];
- const values=Object.fromEntries(fields.map(id=>[id,$(id)?Number($(id).value):NaN]));
+ const values=Object.fromEntries(fields.map(id=>[id,$(id)?id==='rBagPump'&&typeof FluidReferenceNumbers!=='undefined'?FluidReferenceNumbers.value($(id)):Number($(id).value):NaN]));
  const weight=Number($('weight').value),species=$('species').value,method=tool==='reglan'?$('criPrintMethod').value:'r12';
  const r=criPrintModel({tool,species,weight,values,method},CriCalc);
  $('criPrintTitle').textContent=r.title+' · '+(tool==='insulin'?'insulin & dextrose reference':'titration reference');

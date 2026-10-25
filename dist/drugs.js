@@ -1,5 +1,5 @@
 (()=>{
-const $=id=>document.getElementById(id),num=id=>Number($(id).value),fmt=x=>ReferenceNumbers.format(x);
+const $=id=>document.getElementById(id),num=id=>id==='bagRate'&&typeof FluidReferenceNumbers!=='undefined'?FluidReferenceNumbers.value($(id)):Number($(id).value),fmt=x=>ReferenceNumbers.format(x);
 const felineBlocked=['enrofloxacin','meloxicam','meloxicam-po','carprofen','carprofen-po'];
 const groupOrder=['GI','Analgesia','Sedation / Premedication','Induction','Local / Regional','Antibiotics','Oral'];
 function rowGroup(d){

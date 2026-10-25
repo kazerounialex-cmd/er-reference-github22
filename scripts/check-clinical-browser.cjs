@@ -15,6 +15,28 @@ const {chromium}=require('playwright');
  for(const [id,value] of Object.entries({dehydration:8,hours:12,bolus:400,losses:5}))await fill(id,value);
  assert.equal(await text('sharedFluidStatus'),'From Fluid Planner');
  const originalPlan=await page.evaluate(()=>sessionStorage.getItem('er-reference-fluid-v1'));
+ // Reglan bag controls inherit the exact planner rate on both entry pages.
+ const plannerRate=132*20**.75/24+1200/12+5;
+ for(const [file,id,volume,result] of [['cri-reglan.html','rBagPump','rBagVolume','rBagResult'],['drugs.html','bagRate','bagVolume','bagResult']]){
+  await go(file);assert.equal(await text(id+'LinkStatus'),'From Fluid Planner');
+  assert.equal(await page.evaluate(id=>FluidReferenceNumbers.value(document.getElementById(id)),id),plannerRate);
+  await fill(volume,500);
+  const stock=20*2*(500/plannerRate)/24/5;
+  const stockText=stock.toLocaleString('en-US',{maximumSignificantDigits:6,useGrouping:false});
+  assert((await text(result)).includes(stockText+' mL'),'Reglan stock must use the unrounded linked rate');
+  if(file==='cri-reglan.html'){
+   await page.locator('#criPrintMethod').selectOption('rBag');
+   assert((await text('criPrintMix')).includes(Number(stock.toPrecision(6)).toString()+' mL stock'));
+   await fill('r12Pump',2);
+  }
+  await fill(id,25);await fill('sharedFluidRate',60);
+  assert.equal(await page.locator('#'+id).inputValue(),'25');assert.match(await text(id+'LinkStatus'),/Local override/);
+  if(file==='cri-reglan.html')assert.equal(await page.locator('#r12Pump').inputValue(),'2');
+  await page.reload();assert.equal(await page.locator('#'+id).inputValue(),'25');
+  await page.locator('#'+id+'UseShared').click();assert.equal(await page.locator('#'+id).inputValue(),'60');
+  await page.locator('#useCalculatedFluid').click();
+  assert.equal(await page.evaluate(id=>FluidReferenceNumbers.value(document.getElementById(id)),id),plannerRate);
+ }
  await go('potassium.html');assert.equal(await text('kRateLinkStatus'),'From Fluid Planner');
  await fill('sharedFluidRate',40);assert.equal(await text('kRateLinkStatus'),'Shared manual rate');
  assert.match(await text('sharedFluidBreakdown'),/manual rate is active/);

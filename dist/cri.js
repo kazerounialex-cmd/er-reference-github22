@@ -1,5 +1,5 @@
 (()=>{
-const $=id=>document.getElementById(id),n=id=>Number($(id).value),tool=document.body.dataset.cri;
+const $=id=>document.getElementById(id),n=id=>id==='rBagPump'&&typeof FluidReferenceNumbers!=='undefined'?FluidReferenceNumbers.value($(id)):Number($(id).value),tool=document.body.dataset.cri;
 const fmt=x=>ReferenceNumbers.format(x);
 const ready=()=>{CriCalc.positive(n('weight'));if(!$('species').value)throw Error('Select species in the shared banner.');};
 const clear=(out,math,message)=>{$(out).textContent=message;if($(math))$(math).textContent='';};

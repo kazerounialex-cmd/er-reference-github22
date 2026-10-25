@@ -27,7 +27,7 @@ function page(kind){
   const form=el('planner');forms.push(form);
   for(const [id,value] of Object.entries({dehydration:'',hours:'24',losses:'0',bolus:'0'})){el(id,value).parent=form;}
  }
- if(kind==='k'||kind==='p'){const id=kind+'Rate';el(id);el(id+'LinkStatus');el(id+'UseShared');}
+ if(['k','p','reglan','drugBag'].includes(kind)){const id=({reglan:'rBagPump',drugBag:'bagRate'})[kind]||kind+'Rate';el(id);el(id+'LinkStatus');el(id+'UseShared');}
  // Detect accidental linking of separate infusion rates.
  el('mPump','7');el('prepPump','3');
  const ctx={calculate,ReferenceNumbers:require('./dist/number-format.js'),document:{getElementById:id=>ids[id]??null,querySelectorAll:()=>forms,activeElement:null},sessionStorage:{getItem:k=>storage[k]??null,setItem:(k,v)=>storage[k]=v},Event:class{constructor(type){this.type=type;}},window:{addEventListener(t,f){windowEvents[t]=f;}},setTimeout:f=>f()};
@@ -50,3 +50,15 @@ p.click('clearPatient');assert.equal(p.ids.dehydration.value,'');assert.equal(p.
 p=page('k');assert.equal(p.ids.kRate.value,'');assert.equal(p.ids.mPump.value,'7');assert.equal(p.ids.prepPump.value,'3');
 for(const file of fs.readdirSync('dist').filter(f=>f.endsWith('.html'))){const html=fs.readFileSync('dist/'+file,'utf8');assert.equal((html.match(/id="sharedFluidRate"/g)||[]).length,1,file);assert.equal((html.match(/src="calc.js"/g)||[]).length,1,file);assert.ok(html.indexOf('src="fluid-reference.js"')>html.indexOf('src="patient-context.js"'),file);}
 console.log('Shared fluid reference passed: unrounded arithmetic, volume/duration, restored planner inputs, cross-page links, persistent local overrides, relinking, invalid/zero rates, patient changes and clearing; separate infusion rates untouched.');
+
+// Both Reglan fluid-bag controls follow the same exact shared-rate policy.
+for(const [kind,id] of [['reglan','rBagPump'],['drugBag','bagRate']]){
+ const planner=page('planner');planner.input('dehydration',8);planner.input('hours',12);planner.input('bolus',400);planner.input('losses',5);
+ const bag=page(kind);assert.equal(bag.exact(id),expected);assert.equal(bag.ids[id+'LinkStatus'].textContent,'From Fluid Planner');
+ bag.input('sharedFluidRate','40');assert.equal(bag.ids[id].value,'40');assert.equal(bag.ids[id+'LinkStatus'].textContent,'Shared manual rate');
+ bag.input(id,'25');bag.input('sharedFluidRate','60');assert.equal(bag.ids[id].value,'25');assert.match(bag.ids[id+'LinkStatus'].textContent,/Local override/);
+ const restored=page(kind);assert.equal(restored.ids[id].value,'25');restored.click(id+'UseShared');assert.equal(restored.ids[id].value,'60');
+ restored.click('useCalculatedFluid');assert.equal(restored.exact(id),expected);
+ assert.equal(restored.ids.mPump.value,'7');assert.equal(restored.ids.prepPump.value,'3');
+ restored.click('clearPatient');assert.equal(restored.ids[id].value,'');
+}

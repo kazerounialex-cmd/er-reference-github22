@@ -1,4 +1,21 @@
 const DrugCalc={
+ // Only compare with the existing displayed workbook reference, in its units.
+ // This is an advisory range check, never a new species-specific maximum.
+ referenceCheck(drug,dose,units){
+  const match=drug.reference.match(/(\d+(?:\.\d+)?)(?:[–-](\d+(?:\.\d+)?))? (mg|mcg)\/kg/);
+  if(!match||!Number.isFinite(dose)||dose<=0)return null;
+  const normalized=dose/(units.startsWith('mcg')?1000:1)*(match[3]==='mcg'?1000:1);
+  return {outside:normalized<Number(match[1])-1e-12||normalized>Number(match[2]||match[1])+1e-12,
+   low:Number(match[1]),high:Number(match[2]||match[1]),unit:match[3]+'/kg'};
+ },
+ localExposure({weight,lidocaineMg,bupivacaineMg,priorLidocaineMg,priorBupivacaineMg}){
+  if(!Number.isFinite(weight)||weight<=0)throw Error('Enter patient weight.');
+  const doses=[lidocaineMg,bupivacaineMg,priorLidocaineMg,priorBupivacaineMg];
+  if(!doses.every(x=>Number.isFinite(x)&&x>=0))throw Error('Enter known prior exposure for both agents, including explicit zero when none.');
+  const lidocaine=(lidocaineMg+priorLidocaineMg)/weight,bupivacaine=(bupivacaineMg+priorBupivacaineMg)/weight;
+  if(![lidocaine,bupivacaine].every(Number.isFinite))throw Error('Inputs exceed calculation limits.');
+  return {lidocaine,bupivacaine,combined:lidocaine>0&&bupivacaine>0};
+ },
  preparation({weight,dose,stock,mode,volume,rate}){
   if(![weight,dose,stock].every(x=>Number.isFinite(x)&&x>0))throw Error('Enter weight, selected dose and a positive stock concentration.');
   if(mode==='sq'){if(dose<.2||dose>.5)throw Error('SQ reference range is 0.2–0.5 mg/kg per dose.');const r={mg:weight*dose,ml:weight*dose/stock};if(!Object.values(r).every(Number.isFinite))throw Error('Inputs exceed calculation limits.');return r;}

@@ -10,7 +10,7 @@ Requirements: Python 3 and Node.js for development/checks. No npm installation o
 python3 -m http.server 8000 --directory dist
 ```
 
-Then open `http://localhost:8000`. Stop the server with Ctrl+C. Patient weight/species are stored in this browser tab's session; use **Clear patient** for a new patient.
+Then open `http://localhost:8000`. Stop the server with Ctrl+C. Patient weight/species are stored in this browser tab's session; use **New patient / clear all** for a new patient. **Clear preparation** retains shared patient and fluid-plan values.
 
 ## Run every check
 
@@ -94,3 +94,9 @@ Website source commit: `46083220a292d6440d9caf1810f1bf5249cc5592` (hosted versio
 - KCl concentration is highlighted at or above 0.06 mEq/mL with a gentle catheter monitoring reminder. This is a conservative irritation reference, not a universal toxicity cutoff.
 - Patient and fluid data remain in the browser tab session. Clear patient clears the shared rate and overrides.
 - The included GitHub workflow runs checks on pushes and pull requests; it does not publish the site.
+
+## Clinical workflow review and browser checks
+
+See `CLINICAL-REVIEW.md` for preparation precision, reset scope, rate-source labels, explicit concurrent supplemental-potassium reconciliation, preserved insulin chart decisions and remaining source-review requirements. Drug reference-range warnings are advisory; no new species-specific local-anesthetic maximum is enabled.
+
+Optional real-browser regressions require Playwright and Chromium in the development environment. With the local server running, use `node scripts/check-clinical-browser.cjs`. `CHROMIUM_PATH` overrides the default `/usr/bin/chromium`; `ER_REFERENCE_TEST_URL` overrides the local test server address. The test uses synthetic patient inputs and writes an insulin review PDF under `/tmp`. These development tools are not website runtime dependencies.

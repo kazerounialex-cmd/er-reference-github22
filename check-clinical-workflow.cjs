@@ -1,0 +1,27 @@
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const Drug=require('./dist/drug-calc.js'),catalog=require('./dist/drug-data.js');
+const K=require('./dist/concurrent-potassium.js');
+for(const [id,low,high] of [['lidocaine',2,4],['bupivacaine',1,2]]){
+ const drug=catalog.find(d=>d.id===id);
+ for(const dose of [low,high])assert.equal(Drug.referenceCheck(drug,dose,'mg/kg per dose').outside,false);
+ for(const dose of [low/2,high+1])assert.equal(Drug.referenceCheck(drug,dose,'mg/kg per dose').outside,true);
+ assert.equal(Drug.referenceCheck(drug,high*1000,'mcg/kg per dose').outside,false);
+ assert(Drug.single(10,high+1,'mg/kg per dose',drug.stock).ml>0,'Advisory warnings preserve clinician customization');
+}
+assert.deepEqual(Drug.localExposure({weight:10,lidocaineMg:20,bupivacaineMg:10,priorLidocaineMg:5,priorBupivacaineMg:2}),{lidocaine:2.5,bupivacaine:1.2,combined:true});
+assert.throws(()=>Drug.localExposure({weight:10,lidocaineMg:20,bupivacaineMg:10,priorLidocaineMg:NaN,priorBupivacaineMg:0}));
+const records={kcl:{valid:true,rate:.2,other:.044},phosphate:{valid:true,rate:.044,other:.2}};
+let r=K.summarize(records,{kcl:true,phosphate:true},'separate',true);
+assert.equal(r.complete,true);assert(Math.abs(r.total-.244)<1e-12);assert.equal(r.contributions.length,2);assert.equal(r.caution,false);
+assert.equal(K.summarize(records,{},'separate',true).total,undefined);
+assert.equal(K.summarize(records,{kcl:true,phosphate:true},'same',true).complete,false);
+assert.equal(K.summarize(records,{kcl:true,phosphate:true},'separate',false).complete,false);
+assert.equal(K.summarize({...records,kcl:{...records.kcl,other:.1}},{kcl:true,phosphate:true},'separate',true).complete,false);
+assert.equal(K.summarize({...records,kcl:{valid:false}},{kcl:true,phosphate:true},'separate',true).total,undefined);
+r=K.summarize({kcl:{valid:true,rate:.48,other:0},phosphate:{valid:true,rate:.044,other:0}},{kcl:true,phosphate:true},'separate',true);assert.equal(r.caution,true);assert(Math.abs(r.total-.524)<1e-12);
+// Preserve the newer, clinician-confirmed insulin protocol. No BG selector exists.
+const insulin=fs.readFileSync('dist/cri-insulin.html','utf8');
+for(const label of ['≥270','180 to &lt;270','100 to &lt;180','&lt;100'])assert(insulin.includes(label));
+assert.equal((insulin.match(/Exactly 200 mg\/dL/g)||[]).length,2);assert(insulin.includes('Clinician choice required: select 2.5% or 5%.'));assert(insulin.includes('180–270 mg/dL'));
+assert(fs.readFileSync('scripts/insulin-bg-reference.html','utf8').includes('180 to &lt;270'));
+console.log('Clinical workflow checks passed: existing local references, advisory customization, unit conversion, prior exposure, explicit K inclusion, duplicate prevention, incomplete totals, existing K threshold and preserved newer insulin chart.');

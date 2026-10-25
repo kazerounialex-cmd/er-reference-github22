@@ -7,7 +7,7 @@
  function updateEstimate(){
   const species=document.querySelector('[name=species]:checked')?.value;
   if(!['dog','cat'].includes(species)){$('giSpeciesNote').textContent='Select species in the shared banner.';$('giEstimate').textContent='Select species and enter patient weight to estimate losses.';$('giApply').disabled=true;return;}
-  $('giSpeciesNote').textContent=species==='dog'?'Canine use extrapolated from a feline source.':'Feline clinical rule of thumb; measure when possible.';
+  $('giSpeciesNote').textContent=species==='dog'?'Canine use extrapolated from a feline source.':'Assumes a rough feline episode-based loss estimate; measure when possible.';
   try{const rate=estimate();$('giEstimate').textContent=`${rate.toLocaleString('en-US',{maximumFractionDigits:1,minimumFractionDigits:1})} mL/hr estimated`;$('giApply').disabled=false;}
   catch(error){$('giEstimate').textContent=error.message;$('giApply').disabled=true;}
  }

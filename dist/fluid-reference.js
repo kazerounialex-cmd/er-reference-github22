@@ -18,7 +18,7 @@ function fluidReferenceResult(state,patient){
  if(!positive(rate))return {rate:null,plan,volume:null,hours:positive(hours)?hours:null,message:manual?'Enter a positive shared fluid rate.':'Complete the Fluid Planner, or enter a shared rate.'};
  const volume=positive(hours)?rate*hours:null;
  if(volume!==null&&!Number.isFinite(volume))return {rate:null,plan:null,volume:null,hours:null,message:'Inputs exceed calculation limits.'};
- return {rate,plan,volume,hours:positive(hours)?hours:null,message:manual?'Manual shared rate':'Calculated from Fluid Planner'};
+ return {rate,plan,volume,hours:positive(hours)?hours:null,message:manual?'Shared manual rate':'From Fluid Planner'};
 }
 if(typeof module!=='undefined')module.exports={fluidReferenceResult,FluidReferenceNumbers};
 if(typeof document!=='undefined')(()=>{
@@ -50,7 +50,7 @@ if(typeof document!=='undefined')(()=>{
    if(state.override===null)rateInput.value=r.rate===null?'':FluidReferenceNumbers.display(r.rate);
    else if(document.activeElement!==rateInput)rateInput.value=state.override;
    $('sharedFluidStatus').textContent=r.message;
-   $('sharedFluidBreakdown').textContent=r.plan?`Calculated plan · Maintenance ${fmt(r.plan.maintenanceHourly)} + deficit ${fmt(r.plan.replacementHourly)} + losses ${fmt(Number(state.inputs.losses))} mL/hr`:'Fluid Planner breakdown not yet available.';
+   $('sharedFluidBreakdown').textContent=r.plan?`Calculated planner rate ${fmt(r.plan.total)} mL/hr${state.override!==null?' · manual rate is active':''} · Maintenance ${fmt(r.plan.maintenanceHourly)} + deficit ${fmt(r.plan.replacementHourly)} + losses ${fmt(Number(state.inputs.losses))} mL/hr`:'Fluid Planner breakdown not yet available.';
    $('sharedFluidAmounts').textContent=r.volume===null?'Set a duration in Fluid Planner to show planned volume.':`${fmt(r.volume)} mL over ${fmt(r.hours)} hr at the shared rate${r.plan?` · deficit remaining ${fmt(r.plan.remaining)} mL`:''}`;
    $('useCalculatedFluid').disabled=!r.plan||state.override===null;
    for(const field of fields){
@@ -61,7 +61,7 @@ if(typeof document!=='undefined')(()=>{
     else FluidReferenceNumbers.values.set(field,{display:desired,exact:r.rate});
     if(field.value!==desired||(!local&&previous!==r.rate)){field.value=desired;emit(field);}
     const status=$(field.id+'LinkStatus'),button=$(field.id+'UseShared');
-    status.textContent=local?`Local override${r.rate===null?' · no shared rate':` · shared ${fmt(r.rate)} mL/hr`}`:r.rate===null?'Linked · set a shared rate above':'Linked to shared fluid rate';
+    status.textContent=local?`Local override${r.rate===null?' · no shared rate':` · shared ${fmt(r.rate)} mL/hr`}`:r.rate===null?'Linked · set a shared rate above':state.override!==null?'Shared manual rate':'From Fluid Planner';
     button.disabled=r.rate===null||!local;
     field.setAttribute('data-fluid-linked',String(!local));
    }
@@ -77,8 +77,11 @@ if(typeof document!=='undefined')(()=>{
  if(planner)planner.addEventListener('input',()=>{if(busy)return;readPlanner();save();render();});
  function clear(){state=defaults();save();restorePlanner();render();}
  $('clearPatient').addEventListener('click',clear);
- document.querySelectorAll('form').forEach(form=>form.addEventListener('reset',()=>setTimeout(clear,0)));
+ // A local preparation reset retains planner inputs, shared overrides and local
+ // rate choices. Reapply them after the browser resets the form controls.
+ document.querySelectorAll('form').forEach(form=>form.addEventListener('reset',()=>setTimeout(()=>{restorePlanner();render();},0)));
  window.addEventListener('pageshow',()=>{state=read();restorePlanner();render();});
+ window.addEventListener('patientrestored',()=>{state=read();restorePlanner();render();});
  restorePlanner();render();
  // Header can wrap on tablets; keep sticky navigation/results below its real height.
  if(typeof ResizeObserver!=='undefined')new ResizeObserver(entries=>{

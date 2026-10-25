@@ -23,7 +23,7 @@ function loadPage(file){
  }
  for(const match of html.matchAll(/<select\b([^>]*)>([\s\S]*?)<\/select>/g)){const a=attributes(match[1]);ids[a.id].options=[...match[2].matchAll(/<option[^>]*value="([^"]*)"/g)].map(m=>({value:m[1]}));}
  const body=all.find(x=>x.tag==='body');
- const ctx={window:{matchMedia:()=>({matches:true}),innerHeight:900},...calculations,document:{body,getElementById:id=>ids[id]??null,querySelectorAll:select,querySelector:s=>select(s)[0],createElement:tag=>element(tag)},setTimeout:fn=>fn()};
+ const ctx={ReferenceNumbers:require('./dist/number-format.js'),window:{matchMedia:()=>({matches:true}),innerHeight:900},...calculations,document:{body,getElementById:id=>ids[id]??null,querySelectorAll:select,querySelector:s=>select(s)[0],createElement:tag=>element(tag)},setTimeout:fn=>fn()};
  vm.createContext(ctx);vm.runInContext(fs.readFileSync('./dist/electrolyte-layout.js','utf8'),ctx);vm.runInContext(fs.readFileSync('./dist/electrolytes.js','utf8'),ctx);
  const update=()=>vm.runInContext('updatePage()',ctx);
  const fill=values=>{for(const [id,value]of Object.entries(values))ids[id].value=String(value);update();};
@@ -34,8 +34,8 @@ function loadPage(file){
  return {ids,fill,pick,text,select,update,share,patient};
 }
 let page=loadPage('magnesium.html');
-page.fill({mWeight:4.38,mVolume:24});assert.match(page.ids.mMl0.textContent,/1.1 mL/);
-page.pick('mDose',1);assert.equal(page.ids.mResultMath.open,false);assert.match(page.text('mResult'),/1.1 mL/);
+page.fill({mWeight:4.38,mVolume:24});assert.match(page.ids.mMl0.textContent,/1\.095 mL/);
+page.pick('mDose',1);assert.equal(page.ids.mResultMath.open,false);assert.match(page.text('mResult'),/1\.095 mL/);
 page.fill({mHours:12});assert.match(page.text('mResultSteps'),/0.547500/);
 // Pump edits preserve unrounded duration for dose calculations.
 page.fill({mVolume:250,mHours:24});assert.equal(Number(page.ids.mPump.value),Number((250/24).toPrecision(12)));
@@ -66,7 +66,7 @@ page.pick('dTarget',2.5);assert.match(page.text('dResult'),/50.0 mL/);assert.equ
 page.fill({dStock:1,dBase:5});assert.ok(page.select('.lyte-rate').every(b=>b.disabled));assert.equal(page.ids.dResultMath.open,false);
 page=loadPage('sodium.html');page.fill({nWeight:.47,nCurrent:177,nGoal:165});assert.match(page.text('nWater'),/0.85 mL\/hr/);
 page.fill({nGoal:177});assert.doesNotMatch(page.text('nWaterSteps'),/NaN|Infinity/);assert.match(page.text('nWaterSteps'),/no free-water deficit/);
-page.fill({nVolume:1000,nFluidGoal:115,nPreset:'0'});page.ids.nPreset.listeners.change();assert.equal(page.ids.nStock.value,'0');assert.match(page.ids.nCardStockLabel0.textContent,/Sodium-free replacement/);page.select('[data-base="130"]')[0].listeners.click();assert.match(page.text('nMix'),/115.4 mL/);
+page.fill({nVolume:1000,nFluidGoal:115,nPreset:'0'});page.ids.nPreset.listeners.change();assert.equal(page.ids.nStock.value,'0');assert.match(page.ids.nCardStockLabel0.textContent,/Sodium-free replacement/);page.select('[data-base="130"]')[0].listeners.click();assert.match(page.text('nMix'),/115\.38462 mL/);
 page.fill({qVolumeA:900,qVolumeB:100});assert.match(page.text('nQuick'),/117.0 mEq\/L/);
 page.fill({gNa:154,gGlucose:504,gSpecies:'cat'});assert.match(page.text('nGlucose'),/160.5 mEq\/L/);assert.match(page.text('nGlucose'),/extrapolation/);
 page.select('[data-path="hypo"]')[0].listeners.click();assert.equal(page.ids.hypoWorkflow.hidden,false);assert.equal(page.ids.hyperWorkflow.hidden,true);

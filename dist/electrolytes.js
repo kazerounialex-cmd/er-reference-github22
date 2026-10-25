@@ -1,7 +1,7 @@
 const referenceScrollBehavior=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth';
 const e=id=>document.getElementById(id);
 const format=(n,decimals=3)=>n.toLocaleString('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
-const ml=n=>n>0&&n<.1?'<0.1 mL (see math)':format(n,1)+' mL';
+const ml=n=>ReferenceNumbers.volume(n)+' mL';
 let magnesiumHours=null;
 function number(id,optional=false){
   const field=e(id);
@@ -11,9 +11,13 @@ function number(id,optional=false){
   return id==='mHours'&&magnesiumHours?.display===field.value?magnesiumHours.exact:Number(field.value);
 }
 function clearResult(id,message){
-  const p=document.createElement('p');p.className='help';p.textContent=message;e(id).replaceChildren(p);e(id+'Steps').replaceChildren();e(id+'Math').open=false;
+  const p=document.createElement('p');p.className='help';p.textContent='Invalid: '+message;e(id).replaceChildren(p);e(id+'Steps').replaceChildren();e(id+'Math').open=false;
 }
 function result(id,rows,steps,note=''){
+  // Keep the stock volume first, followed by pump, delivery and duration when
+  // those outputs exist. Secondary quantities and math remain below.
+  const priority=label=>/pump rate|Run at/i.test(label)?1:/Verified.*rate|Daily-equivalent|Combined entered supplemental K/i.test(label)?2:/duration|Lasts/i.test(label)?3:4;
+  rows=[rows[0],...rows.slice(1).sort((a,b)=>priority(a[0])-priority(b[0]))];
   const lines=rows.map(([label,value],i)=>{const line=document.createElement('div');line.className='line'+(i===0?' primary-output':'');const name=document.createElement('span');name.textContent=label;const v=document.createElement('b');v.textContent=value;line.append(name,v);return line;});
   if(note){const p=document.createElement('p');p.className='help'+(/ABOVE|DECREASE/.test(note)?' critical-note':'');p.textContent=note;lines.push(p);}
   e(id).replaceChildren(...lines);
@@ -68,7 +72,7 @@ function updatePhosphate(){
     const dose=number('pDose'),r=run(dose),weight=number('pWeight'),flow=number('pRate'),stock=number('pStock'),k=number('pKStock'),volume=number('pVolume'),other=number('pOtherK'),c=dose*weight/flow;
     e('pKRateHero').textContent=format(r.kRate);e('pKHourlyHero').textContent=format(r.kRate*weight);e('pKAmountHero').textContent=format(r.potassiumAmount,1);
     e('pKHeroStatus').textContent=`Selected phosphate rate: ${dose} mmol/kg/hr. Combined entered supplemental K, including separate infusions: ${format(r.totalK)} mEq/kg/hr.`;
-    result('pResult',[['KPHOS STOCK TO ADD',ml(r.additive)],['Carrier volume',ml(r.carrier)],['Final prepared volume',ml(r.finalVolume)],['Phosphate in preparation',format(r.phosphateAmount)+' mmol'],['Potassium in preparation',format(r.potassiumAmount)+' mEq'],['K from KPhos',format(r.kRate)+' mEq/kg/hr'],['Combined entered supplemental K',format(r.totalK)+' mEq/kg/hr'],['Bag duration',format(r.bagHours)+' hr'],['Verified phosphate rate',format(r.delivered)+' mmol/kg/hr']],[`Phosphate needed: ${dose} mmol/kg/hr × ${weight} kg = ${format(dose*weight)} mmol/hr.`,`Required phosphate concentration: ${format(dose*weight)} ÷ ${flow} = ${format(c,6)} mmol/mL.`,e('pMethod').value==='final'?`Stock: ${volume} × ${format(c,6)} ÷ ${stock} = ${format(r.additive,6)} mL.`:`Stock: ${volume} × ${format(c,6)} ÷ (${stock} − ${format(c,6)}) = ${format(r.additive,6)} mL.`,`K contribution: ${dose} × ${k} ÷ ${stock} = ${format(r.kRate,6)} mEq/kg/hr.`,`Total entered supplemental K: ${format(r.kRate,6)} + ${other} = ${format(r.totalK,6)} mEq/kg/hr.`,`Phosphate check: ${format(r.phosphateAmount)} mmol ÷ ${format(r.finalVolume)} mL × ${flow} mL/hr ÷ ${weight} kg = ${format(r.delivered)} mmol/kg/hr.`],'No KCl co-mixing is calculated. If KPhos runs through a separate infusion, its K contribution can be entered in the KCl page’s separate-infusion field.');
+    result('pResult',[['KPHOS STOCK TO ADD',ml(r.additive)],['Carrier volume',ml(r.carrier)],['Final prepared volume',ml(r.finalVolume)],['Phosphate in preparation',format(r.phosphateAmount)+' mmol'],['Potassium in preparation',format(r.potassiumAmount)+' mEq'],['K from KPhos',format(r.kRate)+' mEq/kg/hr'],['Combined entered supplemental K',format(r.totalK)+' mEq/kg/hr'],['Run at',ReferenceNumbers.format(flow,8)+' mL/hr'],['Lasts',format(r.bagHours)+' hr'],['Verified phosphate rate',format(r.delivered)+' mmol/kg/hr']],[`Phosphate needed: ${dose} mmol/kg/hr × ${weight} kg = ${format(dose*weight)} mmol/hr.`,`Required phosphate concentration: ${format(dose*weight)} ÷ ${flow} = ${format(c,6)} mmol/mL.`,e('pMethod').value==='final'?`Stock: ${volume} × ${format(c,6)} ÷ ${stock} = ${format(r.additive,6)} mL.`:`Stock: ${volume} × ${format(c,6)} ÷ (${stock} − ${format(c,6)}) = ${format(r.additive,6)} mL.`,`K contribution: ${dose} × ${k} ÷ ${stock} = ${format(r.kRate,6)} mEq/kg/hr.`,`Total entered supplemental K: ${format(r.kRate,6)} + ${other} = ${format(r.totalK,6)} mEq/kg/hr.`,`Phosphate check: ${format(r.phosphateAmount)} mmol ÷ ${format(r.finalVolume)} mL × ${flow} mL/hr ÷ ${weight} kg = ${format(r.delivered)} mmol/kg/hr.`],'No KCl co-mixing is calculated. If KPhos runs through a separate infusion, its K contribution can be entered in the KCl page’s separate-infusion field.');
   });
 }
 function updateDextrose(){

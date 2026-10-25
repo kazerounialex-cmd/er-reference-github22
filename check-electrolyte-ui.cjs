@@ -36,12 +36,12 @@ function loadPage(file){
 let page=loadPage('magnesium.html');
 page.fill({mWeight:4.38,mVolume:24});assert.match(page.ids.mMl0.textContent,/1\.095 mL/);
 page.pick('mDose',1);assert.equal(page.ids.mResultMath.open,false);assert.match(page.text('mResult'),/1\.095 mL/);
-page.fill({mHours:12});assert.match(page.text('mResultSteps'),/0.547500/);
+page.fill({mHours:12});assert.match(page.text('mResultSteps'),/0\.548/);
 // Pump edits preserve unrounded duration for dose calculations.
 page.fill({mVolume:250,mHours:24});assert.equal(Number(page.ids.mPump.value),Number((250/24).toPrecision(12)));
 page.ids.mPump.value='3';page.ids.mPump.listeners.input();page.update();
 assert.equal(Number(page.ids.mHours.value),Number((250/3).toPrecision(12)));
-assert.match(page.text('mResultSteps'),/3.802083/);
+assert.match(page.text('mResultSteps'),/3\.802/);
 page.fill({mVolume:500});assert.equal(Number(page.ids.mPump.value),6);
 page.ids.mHours.value='10';page.ids.mHours.listeners.input();page.update();assert.equal(Number(page.ids.mPump.value),50);
 for(const invalid of ['', '0', '-1']){
@@ -61,12 +61,12 @@ page=loadPage('phosphate.html');page.fill({pWeight:10,pRate:40,pVolume:1000});
 page.pick('pDose',.06);assert.match(page.text('pResult'),/0.088 mEq\/kg\/hr/);assert.equal(page.ids.pKRateHero.textContent,'0.088');assert.equal(page.ids.pKHourlyHero.textContent,'0.880');assert.equal(page.ids.pKAmountHero.textContent,'22.0');
 page.fill({pKStock:2});assert.match(page.text('pResult'),/0.040 mEq\/kg\/hr/);
 page.fill({pOtherK:.6});assert.ok(page.select('.lyte-rate').every(b=>b.disabled));assert.match(page.text('pResult'),/exceeds/);assert.equal(page.ids.pResultMath.open,false);assert.equal(page.ids.pKRateHero.textContent,'—');
-page=loadPage('dextrose.html');page.fill({dVolume:1000});assert.equal(page.ids.dMl1.textContent,'50.0 mL');
-page.pick('dTarget',2.5);assert.match(page.text('dResult'),/50.0 mL/);assert.equal(page.ids.dResultMath.open,false);
+page=loadPage('dextrose.html');page.fill({dVolume:1000});assert.equal(page.ids.dMl1.textContent,'50.00 mL');
+page.pick('dTarget',2.5);assert.match(page.text('dResult'),/50\.00 mL/);assert.equal(page.ids.dResultMath.open,false);
 page.fill({dStock:1,dBase:5});assert.ok(page.select('.lyte-rate').every(b=>b.disabled));assert.equal(page.ids.dResultMath.open,false);
 page=loadPage('sodium.html');page.fill({nWeight:.47,nCurrent:177,nGoal:165});assert.match(page.text('nWater'),/0.85 mL\/hr/);
 page.fill({nGoal:177});assert.doesNotMatch(page.text('nWaterSteps'),/NaN|Infinity/);assert.match(page.text('nWaterSteps'),/no free-water deficit/);
-page.fill({nVolume:1000,nFluidGoal:115,nPreset:'0'});page.ids.nPreset.listeners.change();assert.equal(page.ids.nStock.value,'0');assert.match(page.ids.nCardStockLabel0.textContent,/Sodium-free replacement/);page.select('[data-base="130"]')[0].listeners.click();assert.match(page.text('nMix'),/115\.38462 mL/);
+page.fill({nVolume:1000,nFluidGoal:115,nPreset:'0'});page.ids.nPreset.listeners.change();assert.equal(page.ids.nStock.value,'0');assert.match(page.ids.nCardStockLabel0.textContent,/Sodium-free replacement/);page.select('[data-base="130"]')[0].listeners.click();assert.match(page.text('nMix'),/115\.385 mL/);
 page.fill({qVolumeA:900,qVolumeB:100});assert.match(page.text('nQuick'),/117.0 mEq\/L/);
 page.fill({gNa:154,gGlucose:504,gSpecies:'cat'});assert.match(page.text('nGlucose'),/160.5 mEq\/L/);assert.match(page.text('nGlucose'),/extrapolation/);
 page.select('[data-path="hypo"]')[0].listeners.click();assert.equal(page.ids.hypoWorkflow.hidden,false);assert.equal(page.ids.hyperWorkflow.hidden,true);
@@ -78,8 +78,8 @@ console.log('Passed simulated UI: all four pages, live dose choices, worked math
 // Integration: restored/shared patient updates must reach calculations without
 // manually calling updatePage or editing another preparation field.
 page=loadPage('magnesium.html');page.fill({mVolume:24,mDose:1});page.share();
-assert.equal(page.ids.mMl0.textContent,'5.0 mL');page.patient(10);assert.equal(page.ids.mMl0.textContent,'2.5 mL');
-assert.match(page.text('mResult'),/2.5 mL/);page.patient('');assert.equal(page.ids.mMl0.textContent,'— mL');assert.doesNotMatch(page.text('mResult'),/2.5 mL/);
+assert.equal(page.ids.mMl0.textContent,'5.00 mL');page.patient(10);assert.equal(page.ids.mMl0.textContent,'2.50 mL');
+assert.match(page.text('mResult'),/2\.50 mL/);page.patient('');assert.equal(page.ids.mMl0.textContent,'— mL');assert.doesNotMatch(page.text('mResult'),/2\.50 mL/);
 page=loadPage('phosphate.html');page.fill({pRate:40,pVolume:1000,pDose:.06});page.share();
 assert.equal(page.ids.pKHourlyHero.textContent,'1.760');page.patient(10);assert.equal(page.ids.pKHourlyHero.textContent,'0.880');
 page.patient('');assert.equal(page.ids.pKHourlyHero.textContent,'—');assert.ok(page.select('.lyte-rate').every(b=>b.disabled));

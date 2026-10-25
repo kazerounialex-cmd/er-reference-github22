@@ -50,7 +50,7 @@ if(typeof document!=='undefined')(()=>{
   $('includeKcl').checked=!!state.included.kcl;$('includeKphos').checked=!!state.included.phosphate;
   $('concurrentArrangement').value=state.arrangement;$('allPotassiumSources').checked=state.reviewed;
   const r=SupplementalPotassium.summarize(state.records,state.included,state.arrangement,state.reviewed);
-  const fmt=n=>ReferenceNumbers.format(n,8);
+  const fmt=n=>ReferenceNumbers.display(n);
   $('concurrentContributions').textContent=r.contributions.map(c=>`${c.name==='kcl'?'KCl':'KPhos'}: ${fmt(c.rate)} mEq/kg/hr (${fmt(state.records[c.name].volume)} mL final at ${fmt(state.records[c.name].flow)} mL/hr)`).join(' · ')||'No valid preparations selected.';
   $('concurrentTotal').textContent=r.total===undefined?'—':`${r.complete?'Combined supplemental K':'Incomplete · selected-source subtotal'}: ${fmt(r.total)} mEq/kg/hr`;
   $('concurrentStatus').textContent=r.message;

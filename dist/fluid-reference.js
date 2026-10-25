@@ -29,7 +29,7 @@ if(typeof document!=='undefined')(()=>{
   try{const saved=JSON.parse(sessionStorage.getItem(key));
    for(const name of Object.keys(state.inputs))if(typeof saved?.inputs?.[name]==='string')state.inputs[name]=saved.inputs[name];
    if(typeof saved?.override==='string')state.override=saved.override;
-   for(const id of ['kRate','pRate'])if(typeof saved?.locals?.[id]==='string')state.locals[id]=saved.locals[id];
+   for(const id of ['kRate','pRate','rBagPump','bagRate'])if(typeof saved?.locals?.[id]==='string')state.locals[id]=saved.locals[id];
   }catch{}
   return state;
  }
@@ -37,7 +37,7 @@ if(typeof document!=='undefined')(()=>{
  const planner=$('planner'),rateInput=$('sharedFluidRate');
  if(!rateInput)return;
  const fmt=n=>n.toLocaleString('en-US',{maximumFractionDigits:1,useGrouping:false});
- const fields=['kRate','pRate'].map($).filter(Boolean);
+ const fields=['kRate','pRate','rBagPump','bagRate'].map($).filter(Boolean);
  const patient=()=>({weight:Number($('masterWeight').value),species:$('masterSpecies').value});
  function save(){try{sessionStorage.setItem(key,JSON.stringify(state));}catch{}}
  function emit(field){field.dispatchEvent(new Event('input',{bubbles:true}));}

@@ -64,3 +64,11 @@ Tests verify implemented arithmetic and wiring. Clinical review and browser/prin
 - Cloudflare static HTML: https://developers.cloudflare.com/pages/framework-guides/deploy-anything/
 
 Packaged October 24, 2026. Source version 74: `46083220a292d6440d9caf1810f1bf5249cc5592`.
+
+## Existing Cloudflare Workers project
+
+A project whose GitHub check is named **Workers Builds** uses Workers static assets rather than the Pages settings above. The repository's `wrangler.json` configures `dist` as the static asset directory, runs the full check suite as its custom build, and enables the `previews` block required by `wrangler preview`.
+
+Keep the repository root as the working directory. Preview builds can use `npx wrangler@4.152.0 preview`; production deployment uses `npx wrangler@4.152.0 deploy` only after review and authorization. Node.js and Python 3 must be available for the custom checks. No application npm dependencies or framework build are required. The Wrangler name is `er-reference-github22`, matching the existing project.
+
+For a local packaging check without uploading or deploying, use `npx wrangler@4.152.0 deploy --dry-run`. A successful dry run verifies configuration and packaging; it does not establish that Cloudflare authentication, account settings or a remote deployment succeeded.

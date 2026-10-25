@@ -1,0 +1,11 @@
+{
+  "name": "er-reference-github22",
+  "compatibility_date": "2026-10-25",
+  "assets": {
+    "directory": "./dist"
+  },
+  "build": {
+    "command": "node scripts/check-all.cjs"
+  },
+  "previews": {}
+}

@@ -25,3 +25,13 @@ for(const label of ['≥270','180 to &lt;270','100 to &lt;180','&lt;100'])assert
 assert.equal((insulin.match(/Exactly 200 mg\/dL/g)||[]).length,2);assert(insulin.includes('Clinician choice required: select 2.5% or 5%.'));assert(insulin.includes('180–270 mg/dL'));
 assert(fs.readFileSync('scripts/insulin-bg-reference.html','utf8').includes('180 to &lt;270'));
 console.log('Clinical workflow checks passed: existing local references, advisory customization, unit conversion, prior exposure, explicit K inclusion, duplicate prevention, incomplete totals, existing K threshold and preserved newer insulin chart.');
+// Human-facing precision is bounded, without turning small positive doses into zero.
+const Numbers=require('./dist/number-format.js');
+for(const [value,expected] of [[20.408163,'20.408'],[.099999999,'0.10'],[.03,'0.03'],[.15,'0.15'],[12,'12.00'],[1.095,'1.095'],[.00003,'3.00e-5']]) {
+ assert.equal(Numbers.display(value),expected);
+ assert.equal(Numbers.volume(value),expected);
+}
+for(const value of [.00003,.0015,.005,.03,.15,1.095,20.408163,1000]) {
+ const shown=Numbers.volume(value);assert(Number(shown)>0);
+ const mantissa=shown.split('e')[0];assert(/^\d+\.\d{2,3}$/.test(mantissa),shown);
+}

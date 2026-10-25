@@ -1,7 +1,7 @@
 const referenceScrollBehavior=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth';
 // Form and chart behavior. The arithmetic remains in calc.js.
 const get=id=>document.getElementById(id);
-const kFormat=(n,d=3)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const kFormat=n=>ReferenceNumbers.display(n);
 const kVolume=n=>ReferenceNumbers.volume(n);
 const kQuantity=n=>Number(kVolume(n));
 const bands=[[.5],[.3,.4],[.2,.25],[.1,.15],[.05]];
@@ -15,7 +15,7 @@ function renderChart(base){
  let available=0;
  bands.forEach((rates,i)=>{
   const values=rates.map(target=>{try{return calculatePotassium({...base,target});}catch{return null;}});
-  get('kEq'+i).textContent=values.map(v=>v?ReferenceNumbers.format(v.addedMEq,8)+' mEq':'—').join(' – ');
+  get('kEq'+i).textContent=values.map(v=>v?ReferenceNumbers.display(v.addedMEq)+' mEq':'—').join(' – ');
   get('kMl'+i).textContent=values.map(v=>v?kVolume(v.additive)+' mL':'— mL').join(' – ');
   document.querySelectorAll(`[data-row="${i}"]`).forEach((button,j)=>{
    button.disabled=!values[j];
@@ -37,7 +37,7 @@ function updatePeripheralWarning(concentration=null){
  const above=concentration>0.06+1e-12;
  box.setAttribute('data-level',above?'above':'near');
  get('kPeripheralHeading').textContent='Catheter monitoring';
- const current=concentration.toLocaleString('en-US',{maximumSignificantDigits:8,useGrouping:false});
+ const current=ReferenceNumbers.display(concentration);
  get('kPeripheralMessage').textContent=`Current: ${current} mEq/mL · Peripheral reference: 0.06 mEq/mL. Monitor the catheter site for pain, redness, swelling or phlebitis; reassess the catheter and vascular access if irritation develops.`;
 }
 function clearSelected(message){
@@ -52,11 +52,11 @@ function showMath(p,r){
  const steps=[
   `KCl rate needed: ${p.target} − ${p.otherK} = ${kFormat(net)} mEq/kg/hr.`,
   `KCl delivery: ${kFormat(net)} × ${p.weight} kg = ${kFormat(net*p.weight)} mEq/hr.`,
-  `Required added-K concentration: ${kFormat(net*p.weight)} mEq/hr ÷ ${p.fluidRate} mL/hr = ${kFormat(c,6)} mEq/mL.`,
+  `Required added-K concentration: ${kFormat(net*p.weight)} mEq/hr ÷ ${ReferenceNumbers.display(p.fluidRate)} mL/hr = ${kFormat(c,6)} mEq/mL.`,
   p.method==='final'?`KCl stock volume: ${p.volume} mL × ${kFormat(c,6)} mEq/mL ÷ ${p.stock} mEq/mL = ${kVolume(r.additive)} mL.`:`KCl stock volume: (${p.volume} mL × ${kFormat(c,6)} mEq/mL) ÷ (${p.stock} − ${kFormat(c,6)}) mEq/mL = ${kVolume(r.additive)} mL.`,
   `Preparation: ${kVolume(r.diluent)} mL carrier + ${kVolume(r.additive)} mL KCl = ${kVolume(r.finalVolume)} mL final.`,
-  `KCl in bag: ${kVolume(r.additive)} mL × ${p.stock} mEq/mL = ${ReferenceNumbers.format(r.addedMEq,8)} mEq.`,
-  `Verification: (${ReferenceNumbers.format(r.addedMEq,8)} mEq ÷ ${kVolume(r.finalVolume)} mL) × ${p.fluidRate} mL/hr ÷ ${p.weight} kg + ${p.otherK} mEq/kg/hr = ${ReferenceNumbers.format(r.delivered,8)} mEq/kg/hr.`
+  `KCl in bag: ${kVolume(r.additive)} mL × ${p.stock} mEq/mL = ${ReferenceNumbers.display(r.addedMEq)} mEq.`,
+  `Verification: (${ReferenceNumbers.display(r.addedMEq)} mEq ÷ ${kVolume(r.finalVolume)} mL) × ${ReferenceNumbers.display(p.fluidRate)} mL/hr ÷ ${p.weight} kg + ${p.otherK} mEq/kg/hr = ${ReferenceNumbers.display(r.delivered)} mEq/kg/hr.`
  ];
  get('kMathSteps').replaceChildren(...steps.map(text=>{const li=document.createElement('li');li.textContent=text;return li;}));
 }
@@ -77,9 +77,9 @@ function updatePotassium(){
   const shownFinal=kQuantity(r.additive)+kQuantity(r.diluent);
   const shownDelivered=kQuantity(r.additive)*p.stock/shownFinal*p.fluidRate/p.weight+p.otherK;
   updatePeripheralWarning(r.finalConcentration/1000);
-  if(get('kPump'))get('kPump').textContent=ReferenceNumbers.format(p.fluidRate,8)+' mL/hr';
+  if(get('kPump'))get('kPump').textContent=ReferenceNumbers.display(p.fluidRate)+' mL/hr';
   get('kAdd').textContent=kVolume(r.additive);
-  for(const [id,value,unit] of [['kDiluent',r.diluent,'mL'],['kFinalVolume',r.finalVolume,'mL'],['kAddedMEq',r.addedMEq,'mEq'],['kConcentration',r.finalConcentration/1000,'mEq/mL'],['kHours',r.bagHours,'hr'],['kDelivered',shownDelivered,'mEq/kg/hr']])get(id).textContent=(unit==='mEq/mL'?value.toLocaleString('en-US',{maximumSignificantDigits:8,useGrouping:false}):(unit==='mL'?kVolume(value):['mEq/kg/hr','mEq'].includes(unit)?ReferenceNumbers.format(value,8):kFormat(value,3)))+' '+unit;
+  for(const [id,value,unit] of [['kDiluent',r.diluent,'mL'],['kFinalVolume',r.finalVolume,'mL'],['kAddedMEq',r.addedMEq,'mEq'],['kConcentration',r.finalConcentration/1000,'mEq/mL'],['kHours',r.bagHours,'hr'],['kDelivered',shownDelivered,'mEq/kg/hr']])get(id).textContent=(unit==='mEq/mL'?ReferenceNumbers.display(value):(unit==='mL'?kVolume(value):['mEq/kg/hr','mEq'].includes(unit)?ReferenceNumbers.display(value):kFormat(value,3)))+' '+unit;
   get('kStatus').textContent=method==='final'?`Selected ${p.target} mEq/kg/hr. Remove ${kVolume(r.additive)} mL carrier and replace with the same volume of KCl stock.`:`Selected ${p.target} mEq/kg/hr. Add ${kVolume(r.additive)} mL KCl stock to the measured starting carrier volume.`;
   get('kStatus').textContent+=' Check measurement feasibility, especially for very small stock volumes; verify equipment precision and use a clinician-approved dilution if needed. No dilution recipe is assumed.';
   showMath(p,{...r,addedMEq:kQuantity(r.additive)*p.stock,delivered:shownDelivered});

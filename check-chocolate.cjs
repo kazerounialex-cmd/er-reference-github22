@@ -7,7 +7,7 @@ near(C.concentration('percent',65).low,10.075);near(C.concentration('percent',10
 r=C.estimate({species:'Dog',weight:10,items:[{type:'milk',grams:100},{type:'cocoa',grams:10}]});near(r.highDose,51.5);
 for(const [dose,band] of [[0,'below'],[19.999,'below'],[20,'gi'],[39.999,'gi'],[40,'cardiac'],[50,'cardiac'],[60,'neuro'],[99.999,'neuro'],[100,'lethal'],[200,'lethal']])assert.equal(C.band(dose),band);
 for(const call of [()=>C.toGrams(-1,'g'),()=>C.toGrams(1,'lb'),()=>C.concentration('unknown',0),()=>C.concentration('percent',0),()=>C.concentration('percent',101),()=>C.estimate({species:'Cat',weight:5,items:[{type:'milk',grams:100}]}),()=>C.estimate({species:'Dog',weight:0,items:[]}),()=>C.estimate({species:'Dog',weight:10,items:[{type:'milk',grams:null}]}),()=>C.estimate({species:'Dog',weight:10,items:[{type:'cocoa',grams:1e308}]})])assert.throws(call);
-for(const [dose,position] of [[0,0],[10,.1],[20,.2],[30,.3],[40,.4],[50,.5],[60,.6],[80,.7],[100,.8],[150,.9],[200,1],[300,1]])near(C.position(dose),position);
+for(const [dose,position] of [[0,0],[10,.05],[20,.1],[30,.15],[40,.2],[50,.25],[60,.3],[80,.4],[100,.5],[150,.75],[200,1],[300,1]])near(C.position(dose),position);
 for(const dose of [-1,NaN,Infinity])assert.throws(()=>C.position(dose));
 // A minimal DOM exercises the real UI controller and its dynamic entry listeners.
 const elements={},cards={};

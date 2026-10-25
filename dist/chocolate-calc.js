@@ -30,13 +30,10 @@ const ChocolateCalc = {
     if (!Number.isFinite(dose) || dose < 0) throw new Error('Invalid exposure estimate.');
     return dose >= 100 ? 'lethal' : dose >= 60 ? 'neuro' : dose >= 40 ? 'cardiac' : dose >= 20 ? 'gi' : 'below';
   },
-  // Equal-width reference bands; interpolate within each band, capped at 200 mg/kg.
+  // Linear 0–200 mg/kg display scale; higher exposures stay at the far end.
   position(dose) {
     this.band(dose); // Apply the same finite, nonnegative validation.
-    const edges=[0,20,40,60,100,200];
-    if(dose>=200)return 1;
-    const i=edges.findIndex((edge,index)=>index<5 && dose<edges[index+1]);
-    return (i+(dose-edges[i])/(edges[i+1]-edges[i]))/5;
+    return Math.min(dose / 200, 1);
   },
   estimate({species,weight,items}) {
     if (species !== 'Dog') throw new Error(species === 'Cat' ? 'Canine calculator only. Merck’s numeric risk references here are for dogs; no feline risk estimate is assigned.' : 'Select Dog and enter weight in the shared banner.');

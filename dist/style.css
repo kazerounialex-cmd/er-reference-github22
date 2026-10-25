@@ -107,8 +107,8 @@ body[data-cri="norepinephrine"] #targetPump[readonly]{background:var(--tone-eef1
 #chocDoseIcon{flex:0 0 44px}#chocDoseIcon svg{display:block;width:44px;height:44px}
 .chocolate-band-scroll{overflow-x:auto;padding:4px;overscroll-behavior-x:contain}
 .chocolate-band-scroll:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.chocolate-band-track{position:relative;min-width:680px}
-.chocolate-band-track .chocolate-bands{grid-template-columns:repeat(5,minmax(0,1fr));gap:0}
+.chocolate-band-track{position:relative;min-width:1000px}
+.chocolate-band-track .chocolate-bands{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,2fr) minmax(0,5fr);gap:0}
 .chocolate-band-track .chocolate-band{padding-top:36px;border-radius:0}
 .chocolate-risk-line{position:absolute;top:18px;left:0;right:0;height:3px;background:var(--ink);z-index:1;pointer-events:none}
 .chocolate-risk-dot{position:absolute;top:11px;left:clamp(9px,var(--risk-position,0%),calc(100% - 9px));width:17px;height:17px;box-sizing:border-box;border:3px solid white;outline:2px solid var(--ink);border-radius:50%;background:var(--ink);transform:translateX(-50%);z-index:2;pointer-events:none}
@@ -128,7 +128,7 @@ body[data-cri="norepinephrine"] #targetPump[readonly]{background:var(--tone-eef1
 #chocComparison th,#chocComparison td{font-size:14px;padding:10px}#chocComparison th:first-child{width:35%}#chocComparison td:nth-child(2){font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
 .chocolate-band-track{padding-top:20px}.chocolate-band-track .chocolate-band{padding-top:36px}.chocolate-band-track .chocolate-band h3{font-size:14px}.chocolate-band-track .chocolate-band>b{font-size:14px}.chocolate-band-track .chocolate-band p{font-size:12px}.chocolate-band-track .band-match{font-size:10px}
 .chocolate-risk-line{top:38px}.chocolate-risk-dot{top:31px}.chocolate-boundaries{position:absolute;top:0;left:0;right:0;height:18px;font-size:11px;font-weight:750;display:grid;grid-template-columns:repeat(5,1fr)}
-.chocolate-boundaries span{position:absolute;transform:translateX(-50%)}.chocolate-boundaries span:nth-child(1){left:0;transform:none}.chocolate-boundaries span:nth-child(2){left:20%}.chocolate-boundaries span:nth-child(3){left:40%}.chocolate-boundaries span:nth-child(4){left:60%}.chocolate-boundaries span:nth-child(5){left:80%}.chocolate-boundaries span:nth-child(6){right:0;transform:none}
+.chocolate-boundaries span{position:absolute;transform:translateX(-50%)}.chocolate-boundaries span:nth-child(1){left:0;transform:none}.chocolate-boundaries span:nth-child(2){left:10%}.chocolate-boundaries span:nth-child(3){left:20%}.chocolate-boundaries span:nth-child(4){left:30%}.chocolate-boundaries span:nth-child(5){left:50%}.chocolate-boundaries span:nth-child(6){right:0;transform:none}
 .chocolate-entry{grid-template-columns:minmax(0,2fr) minmax(75px,1fr) 92px}.chocolate-unit-switch{border:0;padding:0;margin:0;min-width:0;display:flex;gap:0}.chocolate-unit-switch legend{font-size:12px;margin-bottom:4px}.chocolate-entry .chocolate-unit-switch button{padding:8px 10px;min-height:38px;flex:1;border-radius:0;font-size:14px}.chocolate-unit-switch button[aria-pressed=true]{background:var(--ink);color:var(--tone-fff);outline:2px solid var(--ink);outline-offset:-2px;font-weight:850;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:600px){.chocolate-entry{grid-template-columns:minmax(0,1fr) 92px}.chocolate-dose-display strong{font-size:30px}#chocComparison th,#chocComparison td{font-size:12px;padding:7px}}
 
@@ -205,7 +205,7 @@ body[data-cri="norepinephrine"] #targetPump[readonly]{background:var(--tone-eef1
 /* Broad reference-color bands sit directly behind the dose marker. */
 .chocolate-band-track .chocolate-band{border-top-width:1px}
 .chocolate-band-track .chocolate-band[data-choc-band="lethal"]{border-top-width:3px}
-.chocolate-risk-line{top:26px;height:26px;background:linear-gradient(to right,#b8c2cb 0%,#b8c2cb 20%,#f0e442 20%,#f0e442 40%,#0072b2 40%,#0072b2 60%,#e69f00 60%,#e69f00 80%,#242424 80%,#242424 100%);border-top:1px solid rgba(23,46,59,.35);border-bottom:1px solid rgba(23,46,59,.35)}
+.chocolate-risk-line{top:26px;height:26px;background:linear-gradient(to right,#b8c2cb 0%,#b8c2cb 10%,#f0e442 10%,#f0e442 20%,#0072b2 20%,#0072b2 30%,#e69f00 30%,#e69f00 50%,#242424 50%,#242424 100%);border-top:1px solid rgba(23,46,59,.35);border-bottom:1px solid rgba(23,46,59,.35)}
 .chocolate-risk-dot{top:30px;width:19px;height:19px;border:3px solid white;outline:2px solid var(--ink);background:var(--ink)}
 
 /* Distinct blue/orange bands replace the easily confused blue/purple pair. */
@@ -214,11 +214,11 @@ body[data-cri="norepinephrine"] #targetPump[readonly]{background:var(--tone-eef1
 .chocolate-band[data-choc-band="cardiac"]{border-top-color:#0072b2}
 .chocolate-band[data-choc-band="neuro"]{border-top-color:#e69f00}
 .chocolate-band[data-choc-band="lethal"]{border-top-color:#242424}
-.chocolate-risk-line::after{content:'';position:absolute;inset:0;background:linear-gradient(to right,transparent calc(20% - 1px),white calc(20% - 1px),white calc(20% + 1px),transparent calc(20% + 1px),transparent calc(40% - 1px),white calc(40% - 1px),white calc(40% + 1px),transparent calc(40% + 1px),transparent calc(60% - 1px),white calc(60% - 1px),white calc(60% + 1px),transparent calc(60% + 1px),transparent calc(80% - 1px),white calc(80% - 1px),white calc(80% + 1px),transparent calc(80% + 1px));pointer-events:none}
+.chocolate-risk-line::after{content:'';position:absolute;inset:0;background:linear-gradient(to right,transparent calc(10% - 1px),white calc(10% - 1px),white calc(10% + 1px),transparent calc(10% + 1px),transparent calc(20% - 1px),white calc(20% - 1px),white calc(20% + 1px),transparent calc(20% + 1px),transparent calc(30% - 1px),white calc(30% - 1px),white calc(30% + 1px),transparent calc(30% + 1px),transparent calc(50% - 1px),white calc(50% - 1px),white calc(50% + 1px),transparent calc(50% + 1px));pointer-events:none}
 
 /* Risk progresses from a cool pale tone to warm, dark tones; texture is redundant. */
-.chocolate-risk-line{background:linear-gradient(to right,#c5d9e7 0%,#c5d9e7 20%,#f3dc62 20%,#f3dc62 40%,#e8a126 40%,#e8a126 60%,#a83b20 60%,#a83b20 80%,#292026 80%,#292026 100%)}
-.chocolate-risk-line::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(255,255,255,.45) 6px 8px),repeating-linear-gradient(45deg,transparent 0 6px,rgba(255,255,255,.4) 6px 8px),repeating-linear-gradient(135deg,transparent 0 6px,rgba(255,255,255,.4) 6px 8px);background-size:20% 100%,20% 100%,20% 100%;background-position:75% 0,100% 0,100% 0;background-repeat:no-repeat}
+.chocolate-risk-line{background:linear-gradient(to right,#c5d9e7 0%,#c5d9e7 10%,#f3dc62 10%,#f3dc62 20%,#e8a126 20%,#e8a126 30%,#a83b20 30%,#a83b20 50%,#292026 50%,#292026 100%)}
+.chocolate-risk-line::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(255,255,255,.45) 6px 8px),repeating-linear-gradient(45deg,transparent 0 6px,rgba(255,255,255,.4) 6px 8px),repeating-linear-gradient(135deg,transparent 0 6px,rgba(255,255,255,.4) 6px 8px);background-size:20% 100%,50% 100%,50% 100%;background-position:37.5% 0,100% 0,100% 0;background-repeat:no-repeat}
 .chocolate-band[data-choc-band="below"]{border-top-color:#c5d9e7}
 .chocolate-band[data-choc-band="gi"]{border-top-color:#f3dc62}
 .chocolate-band[data-choc-band="cardiac"]{border-top-color:#e8a126}

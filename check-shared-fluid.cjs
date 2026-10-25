@@ -45,7 +45,7 @@ p.input('sharedFluidRate','0');assert.equal(p.ids.pRate.value,'');
 p.click('useCalculatedFluid');assert.equal(Number(p.ids.pRate.value),Number(expected.toFixed(2)));assert.equal(p.exact('pRate'),expected);
 p.input('masterWeight','10');const changed=(132*10**.75)/24+400/12+5;assert.equal(Number(p.ids.pRate.value),Number(changed.toFixed(2)));assert.equal(p.exact('pRate'),changed);
 p=page('planner');assert.equal(p.ids.dehydration.value,'8');assert.equal(p.ids.hours.value,'12');assert.equal(p.ids.bolus.value,'400');
-p.input('sharedFluidRate','70');p.input('losses','6');assert.equal(p.ids.sharedFluidRate.value,'70');assert.match(p.ids.sharedFluidStatus.textContent,/Manual/);
+p.input('sharedFluidRate','70');p.input('losses','6');assert.equal(p.ids.sharedFluidRate.value,'70');assert.match(p.ids.sharedFluidStatus.textContent,/manual/i);
 p.click('clearPatient');assert.equal(p.ids.dehydration.value,'');assert.equal(p.ids.sharedFluidRate.value,'');
 p=page('k');assert.equal(p.ids.kRate.value,'');assert.equal(p.ids.mPump.value,'7');assert.equal(p.ids.prepPump.value,'3');
 for(const file of fs.readdirSync('dist').filter(f=>f.endsWith('.html'))){const html=fs.readFileSync('dist/'+file,'utf8');assert.equal((html.match(/id="sharedFluidRate"/g)||[]).length,1,file);assert.equal((html.match(/src="calc.js"/g)||[]).length,1,file);assert.ok(html.indexOf('src="fluid-reference.js"')>html.indexOf('src="patient-context.js"'),file);}

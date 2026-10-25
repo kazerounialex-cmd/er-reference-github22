@@ -46,7 +46,7 @@ const buttons=[];
 rates.forEach((rr,i)=>{elements['kEq'+i]=element();elements['kMl'+i]=element();rr.forEach(rate=>{const b=element();b.dataset={rate:String(rate),row:String(i)};buttons.push(b);});});
 for(const [id,value] of Object.entries({kWeight:'20',kTarget:'',kRate:'50',kVolume:'1000',kStock:'2',kOther:'0',kMethod:'final'}))elements[id].value=value;
 elements.kStock.readOnly=true;elements.kStockEditor.hidden=true;
-const ctx={document:{getElementById:id=>elements[id],createElement:()=>element(),querySelectorAll:selector=>selector==='.rate-pick'?buttons:buttons.filter(b=>selector===`[data-row="${b.dataset.row}"]`)},calculatePotassium,setTimeout:fn=>fn()};
+const ctx={ReferenceNumbers:require('./dist/number-format.js'),document:{getElementById:id=>elements[id],createElement:()=>element(),querySelectorAll:selector=>selector==='.rate-pick'?buttons:buttons.filter(b=>selector===`[data-row="${b.dataset.row}"]`)},calculatePotassium,setTimeout:fn=>fn()};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync('./dist/potassium.js','utf8'),ctx);
 // All rows calculate before a target is selected.
 assert.equal(elements.kMl1.textContent,'60.0 mL – 80.0 mL');assert.equal(elements.kAdd.textContent,'—');assert.ok(buttons.every(b=>!b.disabled));
@@ -65,7 +65,7 @@ elements.kWeight.value='';vm.runInContext('updatePotassium()',ctx);assert.equal(
 // A conflicting concurrent infusion disables only impossible rates.
 elements.kWeight.value='20';elements.kOther.value='.2';vm.runInContext('updatePotassium()',ctx);assert.equal(buttons.find(b=>b.dataset.rate==='0.05').disabled,true);assert.equal(buttons.find(b=>b.dataset.rate==='0.3').disabled,false);
 // Existing-volume mode and custom target still work.
-elements.kOther.value='0';elements.kStock.value='2';elements.kRate.value='50';elements.kTarget.value='.1';elements.kMethod.value='add';vm.runInContext('updatePotassium()',ctx);assert.equal(elements.kAdd.textContent,'20.4');assert.match(elements.kStatus.textContent,/starting carrier/);
+elements.kOther.value='0';elements.kStock.value='2';elements.kRate.value='50';elements.kTarget.value='.1';elements.kMethod.value='add';vm.runInContext('updatePotassium()',ctx);assert.equal(elements.kAdd.textContent,'20.408163');assert.match(elements.kStatus.textContent,/starting carrier/);
 // Browser resets values before reset callback; simulate that default action.
 elements.kStock.readOnly=false;elements.kStock.value='2';elements.kWeight.value='';elements.kTarget.value='';elements.potassiumForm.listeners.reset();assert.equal(elements.kStock.readOnly,true);assert.equal(elements.kStockEditor.hidden,true);assert.equal(elements.kStockDisplay.textContent,'2');assert.equal(elements.kAdd.textContent,'—');
 const html=fs.readFileSync('./dist/potassium.html','utf8');assert.match(html, /id="kStock"[^>]*readonly/);assert.ok(html.indexOf('dose-reference-title')<html.indexOf('id="kResults"'));
@@ -107,4 +107,29 @@ elements.kWeight.value='20';elements.kRate.value='157.02';elements.kTarget.value
 ctx.FluidReferenceNumbers.values.set(elements.kRate,{display:'157.02',exact:exactShared});
 vm.runInContext('updatePotassium()',ctx);
 assert.match(elements.kMathSteps.children[2].textContent,/157.01578849517466/);
-assert.equal(elements.kAdd.textContent,'6.4');
+assert.equal(elements.kAdd.textContent,'6.3687863');
+
+// Independent final-volume examples: concentration × final volume / stock.
+for (const [weight,target,flow,expected] of [[1,.05,10,.03],[10,.1,40,.15]]) {
+ Object.assign(elements.kWeight,{value:String(weight)});elements.kTarget.value=String(target);
+ elements.kRate.value=String(flow);elements.kVolume.value='12';elements.kStock.value='2';elements.kOther.value='0';elements.kMethod.value='final';
+ vm.runInContext('updatePotassium()',ctx);
+ assert.equal(Number(elements.kAdd.textContent),expected);
+ const carrier=Number(elements.kDiluent.textContent.split(' ')[0]);
+ const delivered=expected*2/(carrier+expected)*flow/weight;
+ assert(Math.abs(Number(elements.kDelivered.textContent.split(' ')[0])-delivered)<1e-10);
+ assert(elements.kStatus.textContent.includes('clinician-approved dilution'));
+ assert(elements.kMathSteps.children.some(x=>x.textContent.includes(String(expected)+' mL')));
+}
+for(const value of [1e-12,.00003,.03,.15,.99999,12,1e12]) {
+ const shown=Number(ctx.ReferenceNumbers.volume(value));assert(shown>0);
+ assert(Math.abs(shown/value-1)<1e-7);
+}
+// A nonterminating add-on preparation verifies the displayed (not idealized) dose.
+elements.kWeight.value='20';elements.kRate.value='50';elements.kVolume.value='1000';elements.kTarget.value='.1';elements.kMethod.value='add';
+vm.runInContext('updatePotassium()',ctx);
+assert.equal(elements.kAdd.textContent,'20.408163');
+const shownAdd=20.408163,shownCarrier=1000;
+const expectedShownDose=shownAdd*2/(shownCarrier+shownAdd)*50/20;
+assert(Math.abs(Number(elements.kDelivered.textContent.split(' ')[0])-expectedShownDose)<5e-9);
+assert.equal(elements.kDelivered.textContent,'0.099999999 mEq/kg/hr');

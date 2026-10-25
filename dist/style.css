@@ -436,3 +436,16 @@ body.blood-compact{background:#f4ecef}.blood-compact .blood-results .metric{bord
 @media(max-width:1120px){.patient-header{flex-wrap:wrap}.shared-fluid{flex-basis:100%;max-width:none;border-left:0;border-top:1px solid #cad9df;padding:7px 0 0}.shared-fluid-top{flex-wrap:nowrap}}
 @media(max-width:720px){.patient-header~.sidebar{top:auto}.shared-fluid{min-width:0;width:100%}.shared-fluid-top{flex-wrap:wrap}.shared-fluid-top input{width:95px}.shared-fluid-amounts{font-size:10px}}
 @media print{.shared-fluid,.shared-rate-controls{display:none!important}}
+
+/* Compact, textual clinical states remain readable without color perception. */
+.dose-caution{border-left:3px solid var(--ink);padding:6px 9px;font-size:12px;line-height:1.45;background:var(--tone-fff4dc)}
+.result-assumptions{font-size:12px!important;line-height:1.5;border-top:1px solid var(--line);padding-top:7px}
+.concurrent-controls{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}.concurrent-controls label{font-size:13px;max-width:100%}.concurrent-controls input[type=checkbox]{width:auto;margin-right:6px}.concurrent-controls select{max-width:100%}
+#concurrentContributions,#concurrentStatus{font-size:13px;line-height:1.5}#concurrentTotal{display:block;font-size:18px}
+.shared-rate-controls small,.shared-fluid-status,.shared-fluid-breakdown,.shared-fluid-amounts{font-size:12px;line-height:1.4}
+#kResults .line:has(#kDelivered),#kResults .line:has(#kHours){font-size:14px}
+@media print{.concurrent-controls{display:none}#concurrentPotassium{break-inside:avoid}.result-assumptions{font-size:10px!important}}
+
+.clinical-run b{font-size:23px}.line-result small{font-size:12px}.shared-fluid-top button,.shared-fluid-top a,.shared-rate-controls button{font-size:12px}
+
+.print-bg-guide table{table-layout:fixed}.print-bg-guide th:first-child{width:32%}

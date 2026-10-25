@@ -109,7 +109,7 @@ for name in ['potassium','magnesium','phosphate','sodium','dextrose']:
    conventions=main.one(lambda n:n.tag=='details' and n.cls('panel'))
    for note in extended:conventions.add(note)
    helps=[n for n in chart.children if isinstance(n,N) and n.tag=='p' and n.cls('help')]
-   if helps:text(helps[0],'All rows update live. Select a dose or enter a custom rate. Bold values are mL of KCl stock, rounded to 0.1 mL.')
+   if helps:text(helps[0],'All rows update live. Select a dose or enter a custom rate. Bold values are mL of KCl stock, shown with up to eight significant digits.')
   elif name=='phosphate':
    inputs,chart=sections;result=main.byid('pResultSection');hide_weight(root,'pWeight');heading(inputs,'Fluid & preparation');heading(chart,'Choose by current phosphorus')
    hero=main.byid('pKHeroPanel');hero.attrs['class']='compact-potassium-contribution';heading(hero,'Potassium from this KPhos dose');result.add(hero,2)

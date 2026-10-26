@@ -23,7 +23,7 @@ function loadPage(file){
  }
  for(const match of html.matchAll(/<select\b([^>]*)>([\s\S]*?)<\/select>/g)){const a=attributes(match[1]);ids[a.id].options=[...match[2].matchAll(/<option[^>]*value="([^"]*)"/g)].map(m=>({value:m[1]}));}
  const body=all.find(x=>x.tag==='body');
- const ctx={ReferenceNumbers:require('./dist/number-format.js'),window:{matchMedia:()=>({matches:true}),innerHeight:900},...calculations,document:{body,getElementById:id=>ids[id]??null,querySelectorAll:select,querySelector:s=>select(s)[0],createElement:tag=>element(tag)},setTimeout:fn=>fn()};
+ const ctx={PreparationCheck:require('./dist/preparation-check.js'),ReferenceNumbers:require('./dist/number-format.js'),window:{matchMedia:()=>({matches:true}),innerHeight:900},...calculations,document:{body,getElementById:id=>ids[id]??null,querySelectorAll:select,querySelector:s=>select(s)[0],createElement:tag=>element(tag)},setTimeout:fn=>fn()};
  vm.createContext(ctx);vm.runInContext(fs.readFileSync('./dist/electrolyte-layout.js','utf8'),ctx);vm.runInContext(fs.readFileSync('./dist/electrolytes.js','utf8'),ctx);
  const update=()=>vm.runInContext('updatePage()',ctx);
  const fill=values=>{for(const [id,value]of Object.entries(values))ids[id].value=String(value);update();};

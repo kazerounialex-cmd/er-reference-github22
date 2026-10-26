@@ -18,7 +18,7 @@ Keep `dist` as a folder: `dist/index.html` is the website homepage.
 6. Drag the extracted contents into the upload area, preserving the folder structure.
 7. Commit with a message such as `Initial ER Reference website`.
 
-GitHub accepts folders through drag-and-drop. If your file browser hides dot-prefixed folders, show hidden files or use GitHub Desktop so the included `.github` test workflow and `.githooks` are uploaded too. The website itself lives in `dist`.
+GitHub accepts folders through drag-and-drop. If your file browser hides dot-prefixed folders, show hidden files or use GitHub Desktop so `.githooks` is uploaded too. No GitHub Actions workflow is currently committed. The website itself lives in `dist`.
 
 This package has fewer than 100 files. The original spreadsheet is not needed for hosting: the implemented calculations and references are included.
 
@@ -48,7 +48,7 @@ For manual Cloudflare Direct Upload instead, upload only the CONTENTS of `dist`,
 - `check*.cjs`: calculation and interface regression tests.
 - `scripts/check-all.cjs`: runs the full check suite.
 - `scripts/`: optional generation tools and adapters. The supplied `dist` is ready to host; do not blindly regenerate it.
-- `.github/workflows/checks.yml`: automatic GitHub checks on pushes/pull requests; no publishing credentials required.
+- `wrangler.json`: runs the complete checks before Cloudflare Workers deployment. GitHub Actions is not currently configured.
 - `AUDIT.md`: historical review notes. Review current source/tests for later changes.
 
 Run locally: `python3 -m http.server 8000 --directory dist`, then open http://localhost:8000.

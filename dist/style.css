@@ -449,3 +449,5 @@ body.blood-compact{background:#f4ecef}.blood-compact .blood-results .metric{bord
 .clinical-run b{font-size:23px}.line-result small{font-size:12px}.shared-fluid-top button,.shared-fluid-top a,.shared-rate-controls button{font-size:12px}
 
 .print-bg-guide table{table-layout:fixed}.print-bg-guide th:first-child{width:32%}
+
+.preparation-check:not(:empty){border-left:3px solid var(--ink);padding:6px 9px;font-size:12px;line-height:1.4;background:var(--tone-fff4dc)}.preparation-check:empty{display:none}

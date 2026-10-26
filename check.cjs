@@ -46,7 +46,7 @@ const buttons=[];
 rates.forEach((rr,i)=>{elements['kEq'+i]=element();elements['kMl'+i]=element();rr.forEach(rate=>{const b=element();b.dataset={rate:String(rate),row:String(i)};buttons.push(b);});});
 for(const [id,value] of Object.entries({kWeight:'20',kTarget:'',kRate:'50',kVolume:'1000',kStock:'2',kOther:'0',kMethod:'final'}))elements[id].value=value;
 elements.kStock.readOnly=true;elements.kStockEditor.hidden=true;
-const ctx={ReferenceNumbers:require('./dist/number-format.js'),document:{getElementById:id=>elements[id],createElement:()=>element(),querySelectorAll:selector=>selector==='.rate-pick'?buttons:buttons.filter(b=>selector===`[data-row="${b.dataset.row}"]`)},calculatePotassium,setTimeout:fn=>fn()};
+const ctx={PreparationCheck:require('./dist/preparation-check.js'),ReferenceNumbers:require('./dist/number-format.js'),document:{getElementById:id=>elements[id],createElement:()=>element(),querySelectorAll:selector=>selector==='.rate-pick'?buttons:buttons.filter(b=>selector===`[data-row="${b.dataset.row}"]`)},calculatePotassium,setTimeout:fn=>fn()};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync('./dist/potassium.js','utf8'),ctx);
 // All rows calculate before a target is selected.
 assert.equal(elements.kMl1.textContent,'60.0 mL – 80.0 mL');assert.equal(elements.kAdd.textContent,'—');assert.ok(buttons.every(b=>!b.disabled));

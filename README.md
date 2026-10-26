@@ -25,7 +25,8 @@ This checks JavaScript syntax, pure calculations, simulated form/event behavior,
 - `dist/`: complete website; deployed directly, without a build step.
 - `dist/calc.js`, `electrolyte-calc.js`, `blood-calc.js`, `drug-calc.js`, `cri-calc.js`: calculation logic. Prescribing guidance is kept in page content/data, not inferred by the arithmetic.
 - `dist/patient-context.js`: shared weight/species synchronization and tab-session storage.
-- `dist/number-format.js`: consistent finite-number display; display rounding never feeds calculation formulas.
+- `dist/number-format.js`: consistent finite-number display and exact-value storage for linked fields.
+- `dist/preparation-check.js`: independent verification of what displayed stock, final volume and pump settings deliver; prescribed calculation targets are unchanged.
 - `dist/cri.js`: insulin and Reglan interface only.
 - `dist/cri-preparation.js`: lidocaine, ketamine and norepinephrine interfaces.
 - `dist/fentanyl.js`: linked dose/concentration/rate/volume/time controls and optional normalized-mix shortcut.
@@ -93,10 +94,16 @@ Website source commit: `46083220a292d6440d9caf1810f1bf5249cc5592` (hosted versio
 - Magnesium retains its separate pump rate linked to volume and duration.
 - KCl concentration is highlighted at or above 0.06 mEq/mL with a gentle catheter monitoring reminder. This is a conservative irritation reference, not a universal toxicity cutoff.
 - Patient and fluid data remain in the browser tab session. Clear patient clears the shared rate and overrides.
-- The included GitHub workflow runs checks on pushes and pull requests; it does not publish the site.
+- Cloudflare Workers builds run the suite through `wrangler.json` before deployment. No GitHub Actions workflow is currently committed.
 
 ## Clinical workflow review and browser checks
 
 See `CLINICAL-REVIEW.md` for preparation precision, reset scope, rate-source labels, explicit concurrent supplemental-potassium reconciliation, preserved insulin chart decisions and remaining source-review requirements. Drug reference-range warnings are advisory; no new species-specific local-anesthetic maximum is enabled.
 
 Optional real-browser regressions require Playwright and Chromium in the development environment. With the local server running, use `node scripts/check-clinical-browser.cjs`. `CHROMIUM_PATH` overrides the default `/usr/bin/chromium`; `ER_REFERENCE_TEST_URL` overrides the local test server address. The test uses synthetic patient inputs and writes an insulin review PDF under `/tmp`. These development tools are not website runtime dependencies.
+
+## Maintenance audit checks
+
+`MAINTENANCE-AUDIT.md` ranks confirmed findings and explains the fixes and remaining validation limits. Prescribed targets and existing clinical limits are unchanged. Preparation results distinguish nominal calculations from verification of displayed stock and pump quantities; a Caution requires preparation review. Dilute to the stated final volume rather than treating a rounded carrier estimate as an exact instruction.
+
+Run `python3 scripts/check-generators.py` to regenerate CRI pages twice and run the complete suite in a temporary copy, preserving hand-edited working files. With the local server running, `node scripts/check-maintenance-browser.cjs` exercises every calculator, invalid states, reset behavior, wheel/keyboard access, mobile layouts and PDF text. It requires the same optional Playwright/Chromium tools plus `pdftotext`. PDFs and screenshots use synthetic patient inputs and are written under `/tmp`.

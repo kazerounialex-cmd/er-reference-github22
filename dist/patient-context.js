@@ -20,7 +20,9 @@ function resetPreparations(){
  // restored history entries. Shared values are restored separately below.
  document.querySelectorAll('form').forEach(form=>form.reset?.());
  document.querySelectorAll('input,select,textarea').forEach(field=>{
-  if(['masterWeight','masterSpecies','sharedFluidRate'].includes(field.id))return;
+  // Native form.reset() and the calculator's reset listener own form fields.
+  // Replaying input events on derived controls can erase restored defaults.
+  if(field.form||['masterWeight','masterSpecies','sharedFluidRate'].includes(field.id))return;
   if(field.tagName==='SELECT'){
    const options=Array.from(field.options);
    field.value=(options.find(o=>o.defaultSelected)||options[0])?.value??'';

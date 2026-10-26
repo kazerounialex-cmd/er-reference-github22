@@ -30,6 +30,7 @@ function calculatePotassium({weight, target, fluidRate, volume, stock, otherK, m
   const nativeMEq=diluent*base;
   const delivered=(addedMEq+nativeMEq)/finalVolume*fluidRate/weight+otherK;
   const values={additive,diluent,finalVolume,addedMEq,nativeMEq,delivered,bagHours:finalVolume/fluidRate,finalConcentration:(addedMEq+nativeMEq)/finalVolume*1000};
+  if(target>otherK&&(!(additive>0)||!(addedMEq>0)||!(desiredConcentration>0)))throw Error('Required potassium volume is below supported numeric precision. No zero-volume preparation calculated.');
   if(!Object.values(values).every(Number.isFinite)) throw Error('Inputs are outside the supported numeric range.');
   return values;
 }

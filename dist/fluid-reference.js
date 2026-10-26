@@ -1,8 +1,10 @@
 // Display rounding must not alter the rate used by linked electrolyte math.
+const fluidDisplayNumbers=typeof ReferenceNumbers==='undefined'?require('./number-format.js'):ReferenceNumbers;
+// Compatibility names share one exact-value cache with other linked inputs.
 const FluidReferenceNumbers={
- values:new WeakMap(),
- value(field){const saved=this.values.get(field);return saved&&saved.display===field.value?saved.exact:Number(field.value);},
- display(value){return (typeof ReferenceNumbers==='undefined'?require('./number-format.js'):ReferenceNumbers).display(value);}
+ values:fluidDisplayNumbers.inputs,
+ value(field){return fluidDisplayNumbers.read(field);},
+ display(value){return fluidDisplayNumbers.display(value);}
 };
 // Shared fluid reference. The existing Fluid Planner arithmetic is reused exactly.
 function fluidReferenceResult(state,patient){

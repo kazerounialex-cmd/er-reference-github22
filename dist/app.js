@@ -4,7 +4,7 @@ function update(){
  const keys=['total','maintenance','replacement','lossRate','deficit','credit','remaining'];
  if(!el('planner').checkValidity()){keys.forEach(k=>el(k).textContent='—');el('status').textContent='Enter valid weight, dehydration, replacement hours, and losses.';return;}
  try{
- const p={species:document.querySelector('[name=species]:checked')?.value??'',weight:Number(el('weight').value),dehydration:Number(el('dehydration').value),hours:Number(el('hours').value),losses:Number(el('losses').value),bolus:Number(el('bolus').value),mode:'initial'};
+ const p={species:document.querySelector('[name=species]:checked')?.value??'',weight:Number(el('weight').value),dehydration:Number(el('dehydration').value),hours:Number(el('hours').value),losses:ReferenceNumbers.read(el('losses')),bolus:Number(el('bolus').value),mode:'initial'};
  const r=calculate(p);
  el('total').textContent=fmt(r.total);
  for(const [id,v] of Object.entries({maintenance:r.maintenanceHourly,replacement:r.replacementHourly,lossRate:p.losses}))el(id).textContent=fmt(v)+' mL/hr';

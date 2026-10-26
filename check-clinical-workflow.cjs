@@ -27,11 +27,18 @@ assert(fs.readFileSync('scripts/insulin-bg-reference.html','utf8').includes('180
 console.log('Clinical workflow checks passed: existing local references, advisory customization, unit conversion, prior exposure, explicit K inclusion, duplicate prevention, incomplete totals, existing K threshold and preserved newer insulin chart.');
 // Human-facing precision is bounded, without turning small positive doses into zero.
 const Numbers=require('./dist/number-format.js');
-for(const [value,expected] of [[20.408163,'20.408'],[.099999999,'0.10'],[.03,'0.03'],[.15,'0.15'],[12,'12.00'],[1.095,'1.095'],[.00003,'3.00e-5']]) {
+for(const [value,expected] of [[20.408163,'20.4'],[.099999999,'0.10'],[.03,'0.03'],[.15,'0.15'],[12,'12.0'],[1.095,'1.1'],[.00003,'3.0e-5']]) {
  assert.equal(Numbers.display(value),expected);
  assert.equal(Numbers.volume(value),expected);
 }
 for(const value of [.00003,.0015,.005,.03,.15,1.095,20.408163,1000]) {
  const shown=Numbers.volume(value);assert(Number(shown)>0);
- const mantissa=shown.split('e')[0];assert(/^\d+\.\d{2,3}$/.test(mantissa),shown);
+ const mantissa=shown.split('e')[0];assert(new RegExp('^\\d+\\.\\d{'+(Math.abs(value)<1&&!shown.includes('e')?2:1)+'}$').test(mantissa),shown);
 }
+
+for(const [value,expected] of [[0,'0.00'],[-.15,'-0.15'],[-12.34,'-12.3'],[.999,'1.00'],[1,'1.0']])assert.equal(Numbers.display(value),expected);
+// Generated input labels can be short without becoming the next calculation's inputs.
+const linkedField={value:''};Numbers.write(linkedField,1/3);
+assert.equal(linkedField.value,'0.33');assert.equal(Numbers.read(linkedField),1/3);
+linkedField.value='0.34';assert.equal(Numbers.read(linkedField),.34);
+Numbers.write(linkedField,1/3);Numbers.forget(linkedField);assert.equal(Numbers.read(linkedField),.33);

@@ -1,7 +1,7 @@
 (()=>{
   const $=id=>document.getElementById(id),show=x=>ReferenceNumbers.format(x),items=new Map();
   const names={below:'Below the listed dose threshold',gi:'GI effects reference',cardiac:'Cardiac effects reference',neuro:'Neurologic effects reference',lethal:'Severe toxicity / LD₅₀ reference'};
-  const dose=x=>x.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1,useGrouping:false});
+  const dose=x=>ReferenceNumbers.display(x);
   let nextId=0;
   function update(){
     $('chocDose').className='';$('chocRiskLabel').textContent='';$('chocQuickMath').textContent='';

@@ -11,7 +11,7 @@
     const result=originalSheetCalculate(v,api);
     for(const [cell,value] of Object.entries(result.values)){
       const el=$('os-out-'+cell);if(!el)continue;
-      el.textContent=cell.match(/^[TU](?:6|7|8|9|10)$/)?value.toFixed(1):ReferenceNumbers.format(value);
+      el.textContent=ReferenceNumbers.format(value);
       el.title='Calculated using current site arithmetic';
     }
     for(const [key,message] of Object.entries(result.errors)){

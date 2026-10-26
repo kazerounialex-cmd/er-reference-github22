@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const {bloodPlan,cageSheetMarkup,cageSheetDocument,bloodCSV}=require('./dist/blood-calc.js');
+const {bloodFormat,bloodPlan,cageSheetMarkup,cageSheetDocument,bloodCSV}=require('./dist/blood-calc.js');
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-10);
 const input={weight:1.23,volumePerKg:60,reductionPercent:15,dayPercent:1,fortnightPercent:10};
 const r=bloodPlan(input);near(r.estimated,62.73);near(r.day,.6273);near(r.fortnight,6.273);
@@ -7,7 +7,7 @@ near(bloodPlan({...input,reductionPercent:0}).estimated,73.8);
 for(const change of [{weight:0},{weight:-1},{reductionPercent:100},{volumePerKg:0},{dayPercent:-1},{fortnightPercent:101},{weight:Infinity}])assert.throws(()=>bloodPlan({...input,...change}));
 const p={...input,patient:'<script>alert(1)</script>',record:'A"42',species:'Feline',start:'2026-10-17',clinician:'Dr Example',approvedDay:'',approvedFortnight:''};
 const markup=cageSheetMarkup(p,r);
-assert.equal((markup.match(/<tr>/g)||[]).length,17);assert.ok(markup.includes('0.63 mL'));assert.ok(markup.includes('6.27 mL'));assert.ok(!markup.includes('<script>'));assert.ok(markup.includes('&lt;script&gt;'));
+assert.equal((markup.match(/<tr>/g)||[]).length,17);assert.ok(markup.includes('0.63 mL'));assert.ok(markup.includes('6.3 mL'));assert.ok(!markup.includes('<script>'));assert.ok(markup.includes('&lt;script&gt;'));
 assert.match(markup,/mL \/ 24 hr/);assert.match(markup,/mL \/ 14 days/);assert.match(markup,/Both time windows/);
 assert.ok(cageSheetDocument(p,r).includes('window.print()'));
 assert.match(cageSheetMarkup({},null),/________ mL/);
@@ -19,14 +19,14 @@ let downloads=0,printed='';
 function element(a={}){return {value:a.value??'',textContent:'',disabled:'disabled'in a,readOnly:'readonly'in a,listeners:{},srcdoc:'',addEventListener(name,fn){const previous=this.listeners[name];this.listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},dispatchEvent(event){this.listeners[event.type]?.(event);},focus(){},click(){downloads++;},checkValidity(){if(this.readOnly)return true;if(this.value==='')return !('required'in a);const n=Number(this.value);return Number.isFinite(n)&&(!('min'in a)||n>=Number(a.min))&&(!('max'in a)||n<=Number(a.max));}};}
 for(const match of html.matchAll(/<[a-z][\w-]*\b([^>]*)>/gi)){const a=attrs(match[1]);if(a.id)elements[a.id]=element(a);}
 for(const match of html.matchAll(/<select\b([^>]*)>([\s\S]*?)<\/select>/g)){const a=attrs(match[1]);elements[a.id].value=match[2].match(/<option[^>]*value="([^"]*)"/)[1];}
-const ctx={document:{getElementById:id=>elements[id],createElement:()=>element()},bloodPlan,cageSheetDocument,bloodCSV,bloodFormat:n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),Date,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},window:{open:()=>({opener:{},document:{open(){},write(value){printed=value;},close(){}}})},setTimeout:fn=>fn()};
+const ctx={document:{getElementById:id=>elements[id],createElement:()=>element()},bloodPlan,cageSheetDocument,bloodCSV,bloodFormat,Date,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},window:{open:()=>({opener:{},document:{open(){},write(value){printed=value;},close(){}}})},setTimeout:fn=>fn()};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync('./dist/blood-collection.js','utf8'),ctx);
 assert.equal(elements.bPrint.disabled,true);assert.match(elements.bPreview.srcdoc,/________ mL/);
 elements.bWeight.value='1.23';elements.bPatient.value='Tiny';vm.runInContext('updateBlood()',ctx);
-assert.equal(elements.bTotal.textContent,'62.73');assert.equal(elements.bPrint.disabled,false);assert.match(elements.bPreview.srcdoc,/Tiny/);
+assert.equal(elements.bTotal.textContent,'62.7');assert.equal(elements.bPrint.disabled,false);assert.match(elements.bPreview.srcdoc,/Tiny/);
 elements.bPrint.listeners.click();assert.match(printed,/0.63 mL/);assert.match(printed,/Clinician-approved plan/);assert.equal((printed.match(/<tr>/g)||[]).length,17);
 elements.bCSV.listeners.click();elements.bDownload.listeners.click();assert.equal(downloads,2);
-elements.bContext.value='baseline';vm.runInContext('updateBlood()',ctx);assert.equal(elements.bTotal.textContent,'73.80');
+elements.bContext.value='baseline';vm.runInContext('updateBlood()',ctx);assert.equal(elements.bTotal.textContent,'73.8');
 elements.bAssumptionsToggle.listeners.click();assert.equal(elements.bVolumePerKg.readOnly,false);
 elements.bVolumePerKg.value='0';elements.bAssumptionsToggle.listeners.click();assert.equal(elements.bVolumePerKg.readOnly,false);
 elements.bVolumePerKg.value='60';elements.bAssumptionsToggle.listeners.click();assert.equal(elements.bVolumePerKg.readOnly,true);
@@ -54,10 +54,10 @@ let savedPatient=JSON.stringify({weight:'20',species:'dog'});
 ctx.sessionStorage={getItem:()=>savedPatient,setItem:(_,value)=>{savedPatient=value;}};
 vm.runInContext(fs.readFileSync('./dist/patient-context.js','utf8'),ctx);
 assert.equal(elements.bWeight.value,'20');assert.equal(elements.bSpecies.value,'Canine');
-assert.equal(elements.bTotal.textContent,'1,020.00');assert.equal(elements.bDay.textContent,'10.20');assert.equal(elements.bFortnight.textContent,'102.00');
+assert.equal(elements.bTotal.textContent,'1020.0');assert.equal(elements.bDay.textContent,'10.2');assert.equal(elements.bFortnight.textContent,'102.0');
 assert.equal(elements.bPrint.disabled,false);assert.match(elements.bPreview.srcdoc,/reduced 15%/);
 elements.masterWeight.value='5';elements.masterWeight.dispatchEvent(new ctx.Event('input'));
-assert.equal(elements.bTotal.textContent,'255.00');assert.equal(elements.bDay.textContent,'2.55');
+assert.equal(elements.bTotal.textContent,'255.0');assert.equal(elements.bDay.textContent,'2.6');
 elements.masterSpecies.value='cat';elements.masterSpecies.dispatchEvent(new ctx.Event('change'));
 assert.equal(elements.bSpecies.value,'Feline');assert.match(elements.bPreview.srcdoc,/Feline/);
 elements.clearPatient.dispatchEvent(new ctx.Event('click'));assert.equal(elements.bPrint.disabled,true);assert.equal(elements.bDay.textContent,'—');

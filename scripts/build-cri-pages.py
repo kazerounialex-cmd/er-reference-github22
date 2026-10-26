@@ -56,7 +56,8 @@ for p in D.glob('*.html'):
  s=p.read_text();s=re.sub(r'<details class="nav-group cri-nav".*?</details>','',s,flags=re.S)
  links=''.join(f'<a href="cri-{id}.html"'+(' aria-current="page"' if p.name==f'cri-{id}.html' else '')+'>'+title+('<span class="current-page">Current</span>' if p.name==f'cri-{id}.html' else '')+'</a>' for id,title in items)
  group='<details class="nav-group cri-nav"'+(' open' if p.name.startswith('cri-') else '')+'><summary>CRIs</summary><div class="nav-children">'+links+'</div></details>'
- s=s.replace('<a href="sources.html"',group+'<a href="sources.html"',1)
+ anchor='<a href="chocolate.html"' if '<a href="chocolate.html"' in s else '<a href="sources.html"'
+ s=s.replace(anchor,group+anchor,1)
  s=re.sub(r'(<a href="cri-lidocaine.html"[^>]*>)Lidocaine',r'\1<span class="lidocaine-nav-label">Lidocaine</span><span class="cat-restriction" hidden>Unavailable for cats</span>',s)
  p.write_text(s)
 

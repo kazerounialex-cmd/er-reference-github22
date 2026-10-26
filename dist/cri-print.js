@@ -33,15 +33,19 @@ if(typeof document!=='undefined')(()=>{
  const values=Object.fromEntries(fields.map(id=>[id,$(id)?id==='rBagPump'&&typeof FluidReferenceNumbers!=='undefined'?FluidReferenceNumbers.value($(id)):ReferenceNumbers.read($(id)):NaN]));
  const weight=Number($('weight').value),species=$('species').value,method=tool==='reglan'?$('criPrintMethod').value:'r12';
  const r=criPrintModel({tool,species,weight,values,method},CriCalc);
+ const verified=PreparationCheck.cri(r,tool,weight);
  $('criPrintTitle').textContent=r.title+' · '+(tool==='insulin'?'insulin & dextrose reference':'titration reference');
- $('criPrintMeta').textContent=`${species} · ${show(weight)} kg | Fixed concentration: ${show(r.concentration)} ${r.concentrationUnit} | ${show(r.volume)} mL final.`;
- $('criPrintMix').textContent=`Preparation: ${show(r.drug)} mL stock (${show(r.stock)} ${tool==='insulin'?'U/mL':r.concentrationUnit}) + ${show(r.diluent)} mL ${r.diluentName} = ${show(r.volume)} mL final.`;
- $('criPrintRate').textContent=`Selected rate: ${show(r.pump)} mL/hr delivers ${show(r.dose)} ${r.unit}. Nominal duration: ${show(r.hours)} hours before priming/discard.`;
+ $('criPrintMeta').textContent=`${species} · ${show(weight)} kg | Fixed concentration: ${PreparationCheck.concentration(verified.concentration)} ${r.concentrationUnit} | ${show(verified.volume)} mL final.`;
+ $('criPrintMix').textContent=PreparationCheck.instruction(verified,r.diluentName)+` Stock: ${show(r.stock)} ${tool==='insulin'?'U/mL':r.concentrationUnit}.`;
+ $('criPrintRate').textContent=`Displayed pump ${show(verified.pump)} mL/hr delivers ${show(verified.delivered)} ${r.unit}; prescribed target ${r.dose} ${r.unit}. Nominal duration ${show(verified.hours)} hours before priming/discard. ${verified.note}`;
  if(tool==='insulin'){
- $('criPrintFormula').textContent=`Formula: ${show(weight)} kg × ${show(r.dose)} U/kg/hr × ${show(r.hours)} hr = ${show(r.units)} U; ÷ ${show(r.stock)} U/mL = ${show(r.drug)} mL stock. Pump = dose × weight ÷ prepared U/mL. Preparation run time does not set DKA treatment duration.`;
+ $('criPrintFormula').textContent=`Displayed preparation verification: ${show(verified.drug)} mL × ${show(r.stock)} U/mL = ${show(verified.amount)} U. ÷ ${show(verified.volume)} mL = ${PreparationCheck.concentration(verified.concentration)} U/mL. × ${show(verified.pump)} mL/hr ÷ ${show(weight)} kg = ${show(verified.delivered)} U/kg/hr. Prescribed target ${r.dose} U/kg/hr is unchanged. Preparation run time does not set DKA treatment duration.`;
  }else{
- const conc=tool==='lidocaine'?r.concentration*1000:r.concentration;
- $('criPrintTable').innerHTML='<thead><tr><th scope="col">Rate · mL/hr</th><th scope="col">Dose · '+r.unit+'</th></tr></thead><tbody>'+[...new Set(r.doses)].sort((a,b)=>a-b).map(dose=>`<tr><td>${show(CriCalc.rate(weight,dose,conc,r.unit))}</td><td>${dose}</td></tr>`).join('')+'</tbody>';
+ const conc=tool==='lidocaine'?verified.concentration*1000:verified.concentration;
+ $('criPrintTable').innerHTML='<thead><tr><th scope="col">Rate · mL/hr</th><th scope="col">Delivers · '+r.unit+'</th><th scope="col">Reference target · '+r.unit+'</th></tr></thead><tbody>'+[...new Set(r.doses)].sort((a,b)=>a-b).map(dose=>{
+  const pump=Number(show(CriCalc.rate(weight,dose,conc,r.unit)));
+  return `<tr><td>${show(pump)}</td><td>${show(verified.perPump*pump)}</td><td>${dose}</td></tr>`;
+ }).join('')+'</tbody>';
  }
  $('criPrintStatus').textContent='Prints only this compact reference. Reprint if patient weight or concentration changes.';$('criPrintButton').disabled=false;
  }catch(e){$('criPrintStatus').textContent=e.message;}

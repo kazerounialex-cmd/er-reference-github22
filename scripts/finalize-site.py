@@ -8,6 +8,8 @@ for page in (ROOT / 'dist').glob('*.html'):
     if 'src="number-format.js"' not in text:
         text = text.replace('<script src=', '<script src="number-format.js"></script><script src=', 1)
     text = re.sub(r'(id="(?:insVolume|r12Volume|r6Volume)" type=")number', r'\1hidden', text)
+    if 'src="preparation-check.js"' not in text:
+        text=text.replace('<script src="number-format.js"></script>','<script src="number-format.js"></script><script src="preparation-check.js"></script>',1)
     if 'href="chocolate.html"' not in text:
         text=text.replace('<a href="sources.html"','<a href="chocolate.html">Chocolate Toxicity</a><a href="sources.html"',1)
     if page.name=='chocolate.html':

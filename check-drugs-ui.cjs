@@ -2,7 +2,7 @@ const assert=require('assert/strict'),fs=require('fs'),vm=require('vm'),catalog=
 const els={};function element(id,value=''){return els[id]={id,value,readOnly:true,textContent:'',innerHTML:'',addEventListener(type,fn){this.listener=fn;}};}
 const html=fs.readFileSync('dist/drugs.html','utf8');for(const m of html.matchAll(/<(?:input|select|div|span|p|button|tbody)[^>]*id="([^"]+)"[^>]*>/g)){const v=m[0].match(/value="([^"]*)"/);element(m[1],v?.[1]??'');}
 for(const d of catalog){for(const suffix of ['Dose','Unit','Stock','Result'])element(d.id+suffix,suffix==='Stock'?(d.stock??''):suffix==='Unit'?d.defaultUnit:suffix==='Dose'?String(d.defaultDose):'');}
-const context={ReferenceNumbers:require('./dist/number-format.js'),document:{getElementById:id=>{assert(els[id],id);return els[id];},querySelectorAll:()=>Object.values(els)},DRUG_CATALOG:catalog,DrugCalc:require('./dist/drug-calc.js')};vm.runInNewContext(fs.readFileSync('dist/drugs.js','utf8'),context);
+const context={PreparationCheck:require('./dist/preparation-check.js'),ReferenceNumbers:require('./dist/number-format.js'),document:{getElementById:id=>{assert(els[id],id);return els[id];},querySelectorAll:()=>Object.values(els)},DRUG_CATALOG:catalog,DrugCalc:require('./dist/drug-calc.js')};vm.runInNewContext(fs.readFileSync('dist/drugs.js','utf8'),context);
 assert.equal(els.sqDose.value,'.5');assert.equal(els.syringeDose.value,'2');assert.equal(els.bagDose.value,'2');for(const d of catalog){assert(d.defaultDose>0);assert(els.drugRows.innerHTML.includes(`value="${d.defaultDose}"`));}assert.equal(catalog.find(d=>d.id==='dexmedetomidine-im').defaultDose,7);assert.equal(catalog.find(d=>d.id==='propofol-premed').defaultDose,2);els.weight.value='10';els.species.value='Dog';els.sqDose.value='.5';els.syringeDose.value='2';els.bagDose.value='2';els.bagVolume.value='500';els.bagRate.value='25';els['maropitantDose'].value='1';els.weight.listener();assert(els.sqResult.innerHTML.includes('1.0 mL'));assert(els.syringeResult.innerHTML.includes('2.0 mL'));assert(els.bagResult.innerHTML.includes('3.3 mL'));assert(els.maropitantResult.innerHTML.includes('1.0 mL'));
 els.weight.value='20';els.weight.listener();assert(els.sqResult.innerHTML.includes('2.0 mL'));assert(els.maropitantResult.innerHTML.includes('2.0 mL'));
 els.stockLock.onclick();assert.equal(els.stock.readOnly,false);els.rowLock.onclick();assert.equal(els.maropitantStock.readOnly,false);
@@ -13,3 +13,12 @@ for(const group of ['GI','Analgesia','Sedation / Premedication','Induction','Loc
 
 let calls=0;const originalSingle=context.DrugCalc.single;context.DrugCalc.single=(...args)=>{calls++;return originalSingle(...args);};els.weight.value='10';els.species.value='Dog';els.maropitantDose.value='1';els.maropitantDose.listener();assert.equal(calls,1);assert(els.maropitantResult.innerHTML.includes('1.0 mL'));context.DrugCalc.single=originalSingle;
 console.log(`Drug-row edit evaluates one row rather than all ${catalog.length} catalog rows.`);
+
+// Invalid liquid stock is an error, not an oral/solid formulation fallback.
+els.weight.value='10';els.species.value='Dog';els.maropitantDose.value='1';
+for(const stock of ['', '0', '-1']){els.maropitantStock.value=stock;els.maropitantStock.listener();assert.match(els.maropitantResult.textContent,/Invalid stock/);}
+els.maropitantStock.value='10';els.maropitantStock.listener();assert(els.maropitantResult.innerHTML.includes('1.0 mL'));
+els.gabapentinStock.value='';els.gabapentinDose.value='10';els.gabapentinDose.listener();assert(els.gabapentinResult.innerHTML.includes('No liquid stock'));
+// The existing workbook cap also applies to the stock amount actually displayed:
+// 20 kg × .05 mg/kg = 1 mg; 1/18 mL rounds to .06 mL = 1.08 mg.
+els.weight.value='20';els['acepromazineDose'].value='.05';els['acepromazineStock'].value='18';els['acepromazineDose'].listener();assert.match(els.acepromazineResult.textContent,/existing workbook 1 mg cap/);

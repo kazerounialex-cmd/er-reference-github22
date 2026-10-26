@@ -31,25 +31,31 @@ function update(){
  CriCalc.positive(pump,hours,mix.amount,mix.drug);
  if(!targetMode)ReferenceNumbers.write($('targetPump'),pump);
  const access=document.querySelector('[name=criAccess]:checked').value,limit=access==='peripheral'?16:64;
+ const verified=PreparationCheck.cri({...mix,stock:n('criStock'),volume,pump,dose:n('criDose'),unit:'mcg/kg/min'},tool,n('weight'));
+ if(verified.concentration>limit)concentrationError('Rounded stock and final volume exceed the existing '+access+' '+limit+' mcg/mL access guardrail. Verify the preparation before use.');
  // Round a displayed minimum upward so shortening the text never suggests a rate below the guardrail.
  const minimumPump=n('weight')*n('criDose')*60/limit,scale=minimumPump<1?100:10;
  if(concentration>limit)concentrationError(`Prepared concentration ${fmt(concentration)} mcg/mL exceeds the ${access} workbook guardrail (${limit} mcg/mL). Review access or choose a more dilute preparation${targetMode?` by increasing the target pump rate (at least ${fmt(Math.ceil(minimumPump*scale)/scale)} mL/hr)`:''}. These are workbook guardrails, not validated maximums.`);
  const display=x=>ReferenceNumbers.display(x);
  const doses=[...new Set([...c.rates,n('criDose')])].sort((a,b)=>a-b);
- $('norepiChartMeta').textContent=`${$('species').value} · ${n('weight')} kg | Prepared concentration: ${display(concentration)} mcg/mL | Final volume: ${display(volume)} mL. Fixed preparation for every row.`;
- $('norepiChartTable').innerHTML='<thead><tr><th scope="col">Rate · mL/hr</th><th scope="col">Dose · mcg/kg/min</th></tr></thead><tbody>'+doses.map(dose=>`<tr><td>${display(CriCalc.rate(n('weight'),dose,concentration,'mcg/kg/min'))}</td><td>${dose}</td></tr>`).join('')+'</tbody>';
+ $('norepiChartMeta').textContent=`${$('species').value} · ${n('weight')} kg | Prepared concentration: ${display(verified.concentration)} mcg/mL | Final volume: ${display(verified.volume)} mL. Fixed preparation for every row.`;
+ $('norepiChartTable').innerHTML='<thead><tr><th scope="col">Rate · mL/hr</th><th scope="col">Delivers · mcg/kg/min</th><th scope="col">Reference target · mcg/kg/min</th></tr></thead><tbody>'+doses.map(dose=>{
+ const rate=Number(display(CriCalc.rate(n('weight'),dose,verified.concentration,'mcg/kg/min')));
+ return `<tr><td>${display(rate)}</td><td>${display(verified.perPump*rate)}</td><td>${dose}</td></tr>`;
+ }).join('')+'</tbody>';
  $('printNorepiChart').disabled=false;
- $('prepResult').innerHTML=`<div class="cri-output"><div><small>CALCULATED PUMP RATE</small><strong>${fmt(pump)} mL/hr</strong></div><div><small>CALCULATED RUN TIME</small><strong>${fmt(hours)} hours</strong></div></div><p>Draw up <b>${fmt(mix.drug)} mL norepinephrine stock</b> + <b>${fmt(mix.diluent)} mL D5W</b> to make <b>${fmt(volume)} mL final</b>.</p><p class="help">New preparation calculation · delivers ${n('criDose')} mcg/kg/min · prepared concentration ${fmt(concentration)} mcg/mL · ${fmt(mix.amount)} mcg total. Verify the actual formulation and diluent compatibility.</p>`;
+ $('prepResult').innerHTML=`<div class="cri-output"><div><small>CALCULATED PUMP RATE</small><strong>${fmt(pump)} mL/hr</strong></div><div><small>CALCULATED RUN TIME</small><strong>${fmt(hours)} hours</strong></div></div><p>${PreparationCheck.instruction(verified,'D5W')}</p><p class="help">Prescribed target ${n('criDose')} mcg/kg/min · displayed preparation delivers ${fmt(verified.delivered)} mcg/kg/min · ${PreparationCheck.concentration(verified.concentration)} mcg/mL · ${fmt(verified.amount)} mcg total. Verify the actual formulation and diluent compatibility.</p><p class="preparation-check" role="status">${verified.note}</p>`;
  const mathFmt=x=>ReferenceNumbers.display(x);
- $('prepMath').textContent=`Pump = ${n('weight')} kg × ${n('criDose')} mcg/kg/min × 60 min/hr ÷ ${concentration} mcg/mL = ${mathFmt(pump)} mL/hr. Run time = ${volume} mL ÷ ${mathFmt(pump)} mL/hr = ${mathFmt(hours)} hours. Stock = ${concentration} mcg/mL × ${volume} mL ÷ ${n('criStock')} mcg/mL = ${mathFmt(mix.drug)} mL. Diluent = ${volume} − ${mathFmt(mix.drug)} = ${mathFmt(mix.diluent)} mL.`;
+ $('prepMath').textContent=`Prescribed calculation before display rounding: Pump ≈ ${n('weight')} kg × ${n('criDose')} mcg/kg/min × 60 min/hr ÷ ${concentration} mcg/mL ≈ ${mathFmt(pump)} mL/hr. Run time ≈ ${volume} mL ÷ ${mathFmt(pump)} mL/hr ≈ ${mathFmt(hours)} hours. Stock ≈ ${concentration} mcg/mL × ${volume} mL ÷ ${n('criStock')} mcg/mL ≈ ${mathFmt(mix.drug)} mL. Diluent ≈ ${volume} − ${mathFmt(mix.drug)} ≈ ${mathFmt(mix.diluent)} mL.`;
  return;
  }
  const factor=tool==='lidocaine'?60/1000:tool==='norepinephrine'?60:1;
  const r=CriCalc.syringe(n('weight'),n('criDose')*factor,n('criStock'),n('prepHours'),n('prepPump'),n('prepCapacity'));
+ const verified=PreparationCheck.cri({...r,stock:n('criStock'),dose:n('criDose'),unit:c.unit},tool,n('weight'));
 
- $('prepResult').innerHTML=`<div class="cri-output"><div><small>${c.title.toUpperCase()} STOCK</small><strong>${fmt(r.drug)} mL</strong></div><div><small>${c.diluent} DILUENT</small><strong>${fmt(r.diluent)} mL</strong></div></div><p>Make <b>${fmt(r.volume)} mL final</b>. Run at <b>${fmt(r.pump)} mL/hr</b> for <b>${fmt(r.hours)} hours</b>.</p><p class="help">Delivers ${n('criDose')} ${c.unit} · prepared concentration ${fmt(r.concentration)} ${c.stockUnit} · total ${fmt(r.amount)} ${tool==='norepinephrine'?'mcg':'mg'}. Verify the actual formulation and diluent compatibility.</p>`;
+ $('prepResult').innerHTML=`<div class="cri-output"><div><small>${c.title.toUpperCase()} STOCK</small><strong>${fmt(r.drug)} mL</strong></div><div><small>${c.diluent} DILUENT</small><strong>${fmt(r.diluent)} mL</strong></div></div><p>${PreparationCheck.instruction(verified,c.diluent)} Run at <b>${fmt(r.pump)} mL/hr</b> for <b>${fmt(r.hours)} hours</b>.</p><p class="help">Prescribed target ${n('criDose')} ${c.unit} · displayed preparation delivers ${fmt(verified.delivered)} ${c.unit} · prepared concentration ${PreparationCheck.concentration(verified.concentration)} ${c.stockUnit} · total ${fmt(verified.amount)} ${tool==='norepinephrine'?'mcg':'mg'}. Verify the actual formulation and diluent compatibility.</p><p class="preparation-check" role="status">${verified.note}</p>`;
  const mathFmt=x=>ReferenceNumbers.display(x);
- $('prepMath').textContent=`Volume = ${mathFmt(r.hours)} hr × ${mathFmt(r.pump)} mL/hr = ${mathFmt(r.volume)} mL. Drug amount = ${n('weight')} kg × ${n('criDose')} ${c.unit} × ${mathFmt(factor)} hourly/unit factor × ${mathFmt(r.hours)} hr = ${mathFmt(r.amount)} ${tool==='norepinephrine'?'mcg':'mg'}. Stock = ${mathFmt(r.amount)} ÷ ${n('criStock')} = ${mathFmt(r.drug)} mL. Diluent = ${mathFmt(r.volume)} − ${mathFmt(r.drug)} = ${mathFmt(r.diluent)} mL.`;
+ $('prepMath').textContent=`Prescribed calculation before display rounding: Volume ≈ ${mathFmt(r.hours)} hr × ${mathFmt(r.pump)} mL/hr ≈ ${mathFmt(r.volume)} mL. Drug amount ≈ ${n('weight')} kg × ${n('criDose')} ${c.unit} × ${mathFmt(factor)} hourly/unit factor × ${mathFmt(r.hours)} hr ≈ ${mathFmt(r.amount)} ${tool==='norepinephrine'?'mcg':'mg'}. Stock ≈ ${mathFmt(r.amount)} ÷ ${n('criStock')} ≈ ${mathFmt(r.drug)} mL. Diluent ≈ ${mathFmt(r.volume)} − ${mathFmt(r.drug)} ≈ ${mathFmt(r.diluent)} mL.`;
  }catch(e){$('prepResult').textContent=e.message;}
 }
 document.querySelectorAll('input,select').forEach(f=>{if(!['masterWeight','masterSpecies','sharedFluidRate'].includes(f.id))f.addEventListener('input',()=>{ReferenceNumbers.forget(f);update();});});update();

@@ -42,6 +42,6 @@ for(const id of ['bWeight','bSpecies']){
 }
 b('bloodForm').addEventListener('input',updateBlood);
 b('bloodForm').addEventListener('submit',event=>event.preventDefault());
-b('bloodForm').addEventListener('reset',()=>setTimeout(()=>{assumptionIds.forEach(id=>b(id).readOnly=true);b('bAssumptionsToggle').textContent='Edit assumptions';b('bAssumptionsState').textContent='Locked';setBloodDate();b('bExportStatus').textContent='Patient cleared. Enter a new weight to create a calculated sheet.';updateBlood();},0));
+b('bloodForm').addEventListener('reset',()=>setTimeout(()=>{assumptionIds.forEach(id=>b(id).readOnly=true);b('bAssumptionsToggle').textContent='Edit assumptions';b('bAssumptionsState').textContent='Locked';setBloodDate();b('bExportStatus').textContent='Preparation cleared. Shared patient and fluid plan are retained.';updateBlood();},0));
 function setBloodDate(){const now=new Date();b('bStart').value=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');}
 setBloodDate();updateBlood();

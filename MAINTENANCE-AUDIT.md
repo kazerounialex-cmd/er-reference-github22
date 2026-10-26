@@ -1,0 +1,47 @@
+# Maintenance audit
+
+This audit began from `4ba9862` (`main`). `AGENTS.md`, `README.md` and the hosting/development instructions were read before editing. The complete existing suite passed before changes. Work is on a separate review branch; no production merge or manual deployment is part of this change.
+
+## Ranked findings and fixes
+
+| Severity | Confirmed finding | Implemented correction |
+| --- | --- | --- |
+| Critical | Rounded stock quantities could deliver a different dose while the result and printout still reported the prescribed target. For example, 0.5 kg × 0.1 U/kg/hr × 50 hr = 2.5 U = 0.025 mL U100. The displayed 0.03 mL contains 3 U and delivers 0.12 U/kg/hr at 5 mL/hr in 250 mL final: 20% above the unchanged prescribed target. | A pure shared verification helper calculates delivery from displayed stock, final volume and pump settings. Results distinguish prescribed targets from displayed-preparation delivery, with a textual Caution when they differ. The target is never changed automatically. |
+| Critical | A mathematically permitted nominal preparation could cross an existing limit after stock rounding. At 0.05 kg, nominal supplemental K 0.5 mEq/kg/hr, 10 mL/hr, 12 mL final and 2 mEq/mL stock requires 0.015 mL. Displaying 0.02 mL would deliver 2/3 mEq/kg/hr. A 64 mcg/mL norepinephrine mix in 12 mL requires 0.768 mL of 1000 mcg/mL stock; the displayed 0.77 mL produces 64.1667 mcg/mL. | The existing 0.5 mEq/kg/hr K limit and existing 16/64 mcg/mL norepinephrine guardrails also check the displayed preparation. The existing workbook 1 mg acepromazine cap likewise checks the displayed stock amount. An offending preparation is blocked with a specific message. No new limit is introduced. |
+| Moderate | Titration tables combined rounded pump rates with nominal dose labels. | Print tables and the norepinephrine chart separate actual calculated delivery at the displayed pump setting from the unchanged reference target. The fixed preparation concentration is derived from the displayed stock/final volume. |
+| Moderate | KCl verification added an independently rounded carrier estimate back into the final-volume calculation. KPhos contribution summaries used nominal rather than displayed-stock delivery. | KCl verification now uses the final-volume convention, or the entered starting carrier plus displayed stock in add-on mode. KPhos result, chart and explicit concurrent-source summary use the same verification model. Carrier estimates are labeled approximate; preparation instructions dilute to the stated final volume. Old nominal-only concurrent-source snapshots are invalidated and require explicit reconfirmation; shared patient/fluid plans are retained. |
+| Moderate | Magnesium, drug and selected dextrose/sodium preparations had the same nominal-versus-rounded verification mismatch. | Relevant result verification and preparation notes now describe displayed quantities. Sodium-response planning deliberately retains the unrounded prescribed mixture and clearly states that distinction; displayed-mixture differences require review before using the estimate. |
+| Moderate | “New patient” reset native form fields and then replayed input events on all of them. Resetting the derived Mg pump to its empty default erased the restored 24-hour duration. | Native forms and their reset handlers now own their controls. The shared reset handles controls outside forms. A real-browser regression verifies the duration and independent patient-reset behavior. |
+| Moderate | Clearing or entering zero/negative liquid drug stock displayed “No liquid stock,” the same fallback used for solid medications. | Liquid stock errors are explicit beside the row, with `aria-invalid` and a description link. Valid solid/oral medications still support no liquid stock. Local-anesthetic cumulative review no longer looks complete with invalid stocks. |
+| Moderate | Extreme finite positive inputs could underflow to zero required additive volume while passing finite-number checks. | Positive required KCl, phosphate, magnesium, mixture and drug-preparation amounts fail closed when not representable. Deliberately selected zero supplementation remains supported. |
+| Minor | The pre-push hook existed but was mode 100644, so Git ignored it. | Its executable bit is tracked and the repository-supported installer was run. The actual hook and full suite were executed. |
+| Minor | CRI regeneration moved the CRI group after Chocolate/Drugs/Original Sheet and failed the required navigation order. | The generator inserts the existing group before Chocolate. A repeatable isolated-copy integration test regenerates twice and runs the full suite after each pass. Working pages keep their familiar navigation. |
+| Minor | Two linked-number caches duplicated exact-value/display handling; blood reset copy said the patient had been cleared even though patient retention was correct; docs referred to an absent GitHub Actions workflow. | Fluid-link compatibility methods delegate to the common exact-value cache. Reset copy and hosting-check documentation were corrected. |
+
+## Clinical behavior preserved
+
+- No prescribed dose, protocol, default, species restriction, reference threshold or access guardrail was changed. The existing dog/cat fixed-rate insulin default and both insulin glucose-support references remain, including clinician choice at exactly 200 mg/dL.
+- Cat lidocaine CRI remains prohibited; local/regional use is not indiscriminately blocked.
+- Native carrier-fluid potassium remains excluded. Concurrent-source inclusion remains explicit. Same-bag preparation/physical compatibility remains outside that summary and is clearly incomplete.
+- The requested display convention remains one decimal at/above 1 and two below 1, with compact scientific notation for very small nonzero quantities. Prescribed reference targets retain their source precision. Verified preparation concentrations retain up to six significant digits where the compact display would obscure the concentration used by the chart; main stock/pump amounts stay compact. Insulin print formulas verify the displayed physical preparation, and rounded worked-math results use approximation signs. Existing pure calculators and linked-input caches retain full precision.
+- Verification is a separate mathematical check of what the displayed settings imply. It does not authorize a changed dose or recommend a dilution recipe. A Caution requires clinician preparation review; its percentage is not a new acceptable-error threshold.
+- The Original Sheet remains a nominal workbook reference, with a visible instruction to verify rounded preparation delivery in dedicated calculators.
+
+## Verification
+
+- Baseline: complete `node scripts/check-all.cjs` passed before edits.
+- Final complete suite: passed, including 18 regression programs, JavaScript syntax and 17-page static integrity checks. Existing independent formula/unit/mass-balance assertions were retained. The table-display test was updated to verify the new delivered-dose column instead of comparing a rounded pump against a nominal target.
+- New `check-maintenance-audit.cjs`: independently derived insulin stock/delivery, hourly/daily and mg/mcg conversions, physical KPhos K contribution, existing K guard violations, final-volume accounting, single-drug stock dose, sodium mixture and numeric-underflow cases.
+- `scripts/check-clinical-browser.cjs`: existing real-browser workflow suite passed, including 17 pages at desktop/phone widths and cross-page patient/rate/reset/override behavior.
+- `scripts/check-maintenance-browser.cjs`: every calculator exercised with representative valid and invalid inputs, displayed-dose warnings, old-snapshot invalidation, invalid-stock clearing, reset behavior, wheel protection, keyboard Tab access and populated mobile layouts. No JavaScript page errors were observed.
+- Seven PDF text checks passed: insulin, fentanyl, lidocaine, ketamine, norepinephrine, Reglan and an actual blood-sheet popup. The insulin PDF includes 0.12 U/kg/hr, prescribed 0.1 U/kg/hr and +20.0% together.
+- `python3 scripts/check-generators.py`: CRI generation and the full suite passed twice in a temporary copy. No broad regeneration overwrote the working checkout.
+- `.githooks/pre-push` was executed directly after its installer; its checks passed.
+
+## Limits and remaining review
+
+Software and browser checks are not clinical validation. Real measuring devices, medication compatibility/stability, physical printed sheets, assistive technology and iOS/Safari/Firefox were not independently validated. Chromium on Linux was used with desktop and narrow viewports; PDF content was inspected, not a physical printer.
+
+The existing clinical references and species-specific local-anesthetic maximum/combined-exposure questions still need the clinician's independent source review. No new numeric recommendation is proposed or activated in this PR. Existing workbook local/regional ranges remain advisory; they are not certified maximum doses. Sodium-response/TBW, maintenance, GI-loss, blood-volume and chocolate-estimate assumptions remain the existing documented choices.
+
+A fresh Cloudflare preview and production behavior cannot be claimed from local checks. GitHub API access previously returned Forbidden in this environment; PR creation will be attempted after the review branch is pushed and any access blocker reported explicitly. No merge or manual deployment is authorized by this audit.

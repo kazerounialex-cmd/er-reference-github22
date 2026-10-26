@@ -18,7 +18,10 @@ const SupplementalPotassium={
 if(typeof module!=='undefined')module.exports=SupplementalPotassium;
 if(typeof document!=='undefined')(()=>{
  const $=id=>document.getElementById(id);if(!$('concurrentPotassium'))return;
- const key='er-reference-concurrent-k-v1';
+ const key='er-reference-concurrent-k-v2';
+ // Old snapshots contain nominal, not displayed-preparation delivery. They
+ // cannot be treated as confirmed active sources after this math correction.
+ try{sessionStorage.removeItem('er-reference-concurrent-k-v1');}catch{}
  const empty=()=>({records:{},included:{},arrangement:'separate',reviewed:false});
  const read=()=>{try{const s=JSON.parse(sessionStorage.getItem(key));return s&&s.records&&s.included?s:empty();}catch{return empty();}};
  let state=read();
@@ -35,7 +38,8 @@ if(typeof document!=='undefined')(()=>{
    const linked=$(current==='kcl'?'kRate':'pRate').getAttribute('data-fluid-linked')==='true';
    const input=current==='kcl'?{weight,target:numeric('kTarget'),fluidRate:flow,volume:numeric('kVolume'),stock:numeric('kStock'),otherK:numeric('kOther'),method:$('kMethod').value}:{weight,dose:numeric('pDose'),fluidRate:flow,volume:numeric('pVolume'),phosStock:numeric('pStock'),kStock:numeric('pKStock'),otherK:numeric('pOtherK'),method:$('pMethod').value};
    const value=current==='kcl'?calculatePotassium(input):phosphate(input);
-   r={valid:true,rate:current==='kcl'?value.delivered-input.otherK:value.kRate,other:input.otherK,flow,linked,patient:patient(),signature:JSON.stringify(input),volume:value.finalVolume};
+   const verified=current==='kcl'?PreparationCheck.potassium(input,value):PreparationCheck.phosphate(input,value);
+   r={valid:true,rate:current==='kcl'?verified.delivered-input.otherK:verified.potassiumRate,other:input.otherK,flow,linked,patient:patient(),signature:JSON.stringify(input),volume:verified.volume};
   }catch{r={valid:false,patient:patient()};}
   const old=state.records[current];
   if(old?.signature!==r.signature||old?.patient!==r.patient){state.included[current]=false;state.reviewed=false;}

@@ -10,6 +10,7 @@ function mixFinal({volume, target, base, stock}) {
   const proportion=(target-base)/(stock-base);
   if(proportion<0 || proportion>1)throw Error('Target must lie between the carrier and stock concentrations.');
   const additive=volume*proportion,carrier=volume-additive;
+  if((proportion>0&&additive<=0)||(proportion<1&&carrier<=0))throw Error('Mixture volumes are below supported numeric precision.');
   return safeResult({additive,carrier,finalVolume:volume,verified:(additive*stock+carrier*base)/volume});
 }
 function mixVolumes({volumeA, concentrationA, volumeB, concentrationB}) {
@@ -21,6 +22,7 @@ function magnesium({weight, dailyDose, hours, stock, volume}) {
   checkNumbers({weight,dailyDose,hours,stock,volume});
   if(weight<=0 || hours<=0 || stock<=0 || volume<=0 || dailyDose<0 || dailyDose>1)throw Error('Use positive weight, hours, stock, and final volume; this tool supports 0–1 mEq/kg/day.');
   const amount=weight*dailyDose*hours/24, additive=amount/stock;
+  if((dailyDose>0&&(!(amount>0)||!(additive>0)))||!(volume/hours>0))throw Error('Magnesium preparation is below supported numeric precision.');
   if(additive>=volume)throw Error('Final volume must exceed the stock volume so the preparation is diluted.');
   return safeResult({amount,additive,carrier:volume-additive,pump:volume/hours,hourlyDose:dailyDose/24,delivered:amount/hours/weight*24});
 }
@@ -32,6 +34,7 @@ function phosphate({weight,dose,fluidRate,volume,phosStock,kStock,otherK,method}
   if(c>=phosStock)throw Error('Stock must be more concentrated than the required mixture.');
   const additive=volume*c/(method==='final'?phosStock:phosStock-c);
   const carrier=method==='final'?volume-additive:volume, finalVolume=carrier+additive;
+  if(dose>0&&(!(additive>0)||!(additive*phosStock>0)))throw Error('Phosphate preparation is below supported numeric precision.');
   const kRate=dose*kStock/phosStock,totalK=kRate+otherK;
   if(totalK>.5+1e-12)throw Error('Combined entered supplemental K exceeds this tool’s 0.5 mEq/kg/hr limit.');
   return safeResult({additive,carrier,finalVolume,bagHours:finalVolume/fluidRate,phosphateAmount:additive*phosStock,potassiumAmount:additive*kStock,kRate,totalK,delivered:additive*phosStock/finalVolume*fluidRate/weight});

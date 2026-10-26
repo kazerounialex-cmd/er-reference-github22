@@ -2,7 +2,7 @@
 const FluidReferenceNumbers={
  values:new WeakMap(),
  value(field){const saved=this.values.get(field);return saved&&saved.display===field.value?saved.exact:Number(field.value);},
- display(value){return value>0&&value<.01?value.toLocaleString('en-US',{maximumSignificantDigits:6,useGrouping:false}):value.toLocaleString('en-US',{maximumFractionDigits:2,useGrouping:false});}
+ display(value){return (typeof ReferenceNumbers==='undefined'?require('./number-format.js'):ReferenceNumbers).display(value);}
 };
 // Shared fluid reference. The existing Fluid Planner arithmetic is reused exactly.
 function fluidReferenceResult(state,patient){
@@ -36,7 +36,7 @@ if(typeof document!=='undefined')(()=>{
  let state=read(),busy=false;
  const planner=$('planner'),rateInput=$('sharedFluidRate');
  if(!rateInput)return;
- const fmt=n=>n.toLocaleString('en-US',{maximumFractionDigits:1,useGrouping:false});
+ const fmt=n=>ReferenceNumbers.display(n);
  const fields=['kRate','pRate','rBagPump','bagRate'].map($).filter(Boolean);
  const patient=()=>({weight:Number($('masterWeight').value),species:$('masterSpecies').value});
  function save(){try{sessionStorage.setItem(key,JSON.stringify(state));}catch{}}

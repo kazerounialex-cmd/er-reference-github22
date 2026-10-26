@@ -1,6 +1,6 @@
 const referenceScrollBehavior=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth';
 const e=id=>document.getElementById(id);
-const format=(n,decimals=3)=>decimals>3?ReferenceNumbers.display(n):n.toLocaleString('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+const format=n=>ReferenceNumbers.display(n);
 const ml=n=>ReferenceNumbers.volume(n)+' mL';
 let magnesiumHours=null;
 function number(id,optional=false){
@@ -37,7 +37,7 @@ function chart(rates,run,render,targetId){
 function syncMagnesiumPump(){
   if(!e('mPump'))return;
   try{const hours=number('mHours'),volume=number('mVolume');
-    e('mPump').value=hours>0&&volume>0?String(Number((volume/hours).toPrecision(12))):'';
+    e('mPump').value=hours>0&&volume>0?ReferenceNumbers.display(volume/hours):'';
   }catch{e('mPump').value='';}
 }
 function updateMagnesium(){
@@ -157,7 +157,7 @@ if(e('mPump')){
     const pump=e('mPump'),volume=Number(e('mVolume').value),rate=Number(pump.value);
     magnesiumHours=null;
     if(pump.value.trim()!==''&&pump.checkValidity()&&rate>0&&Number.isFinite(volume)&&volume>0){
-      const exact=volume/rate,display=String(Number(exact.toPrecision(12)));
+      const exact=volume/rate,display=ReferenceNumbers.display(exact);
       e('mHours').value=display;magnesiumHours={exact,display};
     }else e('mHours').value='';
   });

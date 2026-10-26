@@ -1,5 +1,5 @@
 (()=>{
-const $=id=>document.getElementById(id),n=id=>Number($(id).value),show=x=>Number(x.toPrecision(8)).toString(),put=(id,x)=>{$(id).value=show(x);};
+const $=id=>document.getElementById(id),n=id=>ReferenceNumbers.read($(id)),show=x=>ReferenceNumbers.display(x),put=(id,x)=>{ReferenceNumbers.write($(id),x);};
 $('criStock').readOnly=true;
 $('criLock').onclick=()=>{const f=$('criStock');f.readOnly=!f.readOnly;$('criLock').textContent=f.readOnly?'Edit concentration':'Lock concentration';};
 $('normalizeFent').onclick=()=>{try{CriCalc.positive(n('weight'));put('fentConcentration',n('weight'));update('fentConcentration');}catch(e){$('fentResult').textContent=e.message;$('fentMath').textContent='';}};
@@ -25,5 +25,5 @@ function update(edited){
  $('fentMath').textContent=`Volume = ${show(pump)} mL/hr × ${show(hours)} hr = ${show(volume)} mL. Drug = ${show(concentration)} mcg/mL × ${show(volume)} mL = ${show(mix.amount)} mcg. Stock = ${show(mix.amount)} ÷ ${show(stock)} = ${show(mix.drug)} mL. Diluent = ${show(volume)} − ${show(mix.drug)} = ${show(mix.diluent)} mL.`;
  }catch(e){if(edited==='fentPump'&&!(n('fentPump')>0)){$('fentHours').value='';$('fentConcentration').value='';}if(edited==='fentConcentration'&&!(n('fentConcentration')>0)){$('fentPump').value='';$('fentHours').value='';}$('fentResult').textContent=e.message;}
 }
-document.querySelectorAll('input,select').forEach(f=>{if(!['masterWeight','masterSpecies','sharedFluidRate'].includes(f.id))f.addEventListener('input',()=>update(f.id));});update('fentPump');
+document.querySelectorAll('input,select').forEach(f=>{if(!['masterWeight','masterSpecies','sharedFluidRate'].includes(f.id))f.addEventListener('input',()=>{ReferenceNumbers.forget(f);update(f.id);});});update('fentPump');
 })();

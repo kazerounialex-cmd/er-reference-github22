@@ -6,7 +6,7 @@ function bloodPlan({weight,volumePerKg=60,reductionPercent=15,dayPercent=1,fortn
   if(!Object.values(r).every(Number.isFinite))throw Error('Inputs exceed the supported range.');
   return r;
 }
-const bloodFormat=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const bloodFormat=n=>(typeof ReferenceNumbers!=='undefined'?ReferenceNumbers:require('./number-format.js')).display(n);
 const escapeBlood=text=>String(text??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function cageSheetMarkup(p,r){
   const field=(value,unit='')=>value!==''&&value!==null&&value!==undefined?escapeBlood(value)+unit:'<span class="blank">&nbsp;</span>'+unit;
@@ -28,4 +28,4 @@ function bloodCSV(p,r){
   const lines=[['Blood Collection Log'],['Patient',p.patient],['Record / cage',p.record],['Species',p.species],['Weight (kg)',p.weight],['Sheet start',p.start],['Clinician',p.clinician],['Estimated blood volume (mL)',r.estimated],['Workbook 24-hour guide (mL)',r.day],['Workbook 14-day guide (mL)',r.fortnight],['Clinician-approved mL / 24 hr',p.approvedDay],['Clinician-approved mL / 14 days',p.approvedFortnight],['Blood-volume estimate (mL/kg)',p.volumePerKg],['Reduction (%)',p.reductionPercent],['24-hour collection fraction (%)',p.dayPercent],['14-day collection fraction (%)',p.fortnightPercent],[],['Date','Time','Blood removed incl. discard (mL)','Sheet running total (mL)','Draw site','Test / reason','Initials'],...Array.from({length:16},()=>Array(7).fill(''))];
   return '\uFEFF'+lines.map(row=>row.map(cell).join(',')).join('\r\n');
 }
-if(typeof module!=='undefined')module.exports={bloodPlan,cageSheetMarkup,cageSheetDocument,bloodCSV};
+if(typeof module!=='undefined')module.exports={bloodFormat,bloodPlan,cageSheetMarkup,cageSheetDocument,bloodCSV};

@@ -21,7 +21,7 @@ function criPrintModel({tool,species,weight,values:v,method='r12'},C){
 }
 if(typeof module!=='undefined')module.exports=criPrintModel;
 if(typeof document!=='undefined')(()=>{
- const $=id=>document.getElementById(id),tool=document.body.dataset.cri,show=x=>Number(x.toPrecision(6)).toString();
+ const $=id=>document.getElementById(id),tool=document.body.dataset.cri,show=x=>ReferenceNumbers.display(x);
  if(tool==='reglan')$('criPrintMethod').value='r12';
  $('criPrintPreview').hidden=true;
  $('criPrintToggle').onclick=()=>{update();$('criPrintPreview').hidden=!$('criPrintPreview').hidden;};
@@ -30,7 +30,7 @@ if(typeof document!=='undefined')(()=>{
  $('criPrintButton').disabled=true;['criPrintMeta','criPrintMix','criPrintRate','criPrintFormula'].forEach(id=>$(id).textContent='');$('criPrintTable').innerHTML='';
  try{
  const fields=['criStock','criDose','fentHours','fentCapacity','fentPump','fentVolume','fentConcentration','prepHours','prepPump','prepCapacity','insHours','insPump','insCapacity','insDose',...['r12','r6','rBag'].flatMap(m=>['Dose','Pump','Hours','Capacity','Volume'].map(k=>m+k))];
- const values=Object.fromEntries(fields.map(id=>[id,$(id)?id==='rBagPump'&&typeof FluidReferenceNumbers!=='undefined'?FluidReferenceNumbers.value($(id)):Number($(id).value):NaN]));
+ const values=Object.fromEntries(fields.map(id=>[id,$(id)?id==='rBagPump'&&typeof FluidReferenceNumbers!=='undefined'?FluidReferenceNumbers.value($(id)):ReferenceNumbers.read($(id)):NaN]));
  const weight=Number($('weight').value),species=$('species').value,method=tool==='reglan'?$('criPrintMethod').value:'r12';
  const r=criPrintModel({tool,species,weight,values,method},CriCalc);
  $('criPrintTitle').textContent=r.title+' · '+(tool==='insulin'?'insulin & dextrose reference':'titration reference');
@@ -41,7 +41,7 @@ if(typeof document!=='undefined')(()=>{
  $('criPrintFormula').textContent=`Formula: ${show(weight)} kg × ${show(r.dose)} U/kg/hr × ${show(r.hours)} hr = ${show(r.units)} U; ÷ ${show(r.stock)} U/mL = ${show(r.drug)} mL stock. Pump = dose × weight ÷ prepared U/mL. Preparation run time does not set DKA treatment duration.`;
  }else{
  const conc=tool==='lidocaine'?r.concentration*1000:r.concentration;
- $('criPrintTable').innerHTML='<thead><tr><th scope="col">Rate · mL/hr</th><th scope="col">Dose · '+r.unit+'</th></tr></thead><tbody>'+[...new Set(r.doses)].sort((a,b)=>a-b).map(dose=>`<tr><td>${show(CriCalc.rate(weight,dose,conc,r.unit))}</td><td>${show(dose)}</td></tr>`).join('')+'</tbody>';
+ $('criPrintTable').innerHTML='<thead><tr><th scope="col">Rate · mL/hr</th><th scope="col">Dose · '+r.unit+'</th></tr></thead><tbody>'+[...new Set(r.doses)].sort((a,b)=>a-b).map(dose=>`<tr><td>${show(CriCalc.rate(weight,dose,conc,r.unit))}</td><td>${dose}</td></tr>`).join('')+'</tbody>';
  }
  $('criPrintStatus').textContent='Prints only this compact reference. Reprint if patient weight or concentration changes.';$('criPrintButton').disabled=false;
  }catch(e){$('criPrintStatus').textContent=e.message;}

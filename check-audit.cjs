@@ -15,7 +15,7 @@ for (const call of [
   () => calculate({species:'dog',mode:'initial',weight:1e308,dehydration:10,hours:12,losses:0,bolus:0})
 ]) assert.throws(call);
 assert.equal(format(.14), '0.14');
-assert.equal(format(1.875), '1.875');
+assert.equal(format(1.875), '1.9');
 assert.equal(format(.060000000000000005), '0.06');
 assert.throws(() => format(Infinity));
 // Shared UI/print models: compare entire valid preparations, not a copied formula.

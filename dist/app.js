@@ -1,5 +1,5 @@
 const el=id=>document.getElementById(id);
-const fmt=n=>n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const fmt=n=>ReferenceNumbers.display(n);
 function update(){
  const keys=['total','maintenance','replacement','lossRate','deficit','credit','remaining'];
  if(!el('planner').checkValidity()){keys.forEach(k=>el(k).textContent='—');el('status').textContent='Enter valid weight, dehydration, replacement hours, and losses.';return;}

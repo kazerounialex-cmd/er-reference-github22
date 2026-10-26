@@ -1,10 +1,10 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const {calculate}=require('./dist/calc.js');
 const code=fs.readFileSync('dist/fluid-reference.js','utf8');
-const mathContext={module:{exports:{}},calculate};vm.runInNewContext(code,mathContext);
+const mathContext={ReferenceNumbers:require('./dist/number-format.js'),module:{exports:{}},calculate};vm.runInNewContext(code,mathContext);
 const {fluidReferenceResult,FluidReferenceNumbers}=mathContext.module.exports;
-assert.equal(FluidReferenceNumbers.display(.0001),'0.0001');
-assert.equal(FluidReferenceNumbers.display(157.015788),'157.02');
+assert.equal(FluidReferenceNumbers.display(.0001),'1.0e-4');
+assert.equal(FluidReferenceNumbers.display(157.015788),'157.0');
 const inputs={dehydration:'8',hours:'12',losses:'5',bolus:'400'},patient={weight:20,species:'dog'};
 const state={inputs,override:null};
 const expected=(132*20**.75)/24+1200/12+5;
@@ -35,15 +35,15 @@ function page(kind){
  return {ids,exact(id){return vm.runInContext(`FluidReferenceNumbers.value(document.getElementById('${id}'))`,ctx);},input(id,value){ids[id].value=String(value);ids[id].dispatchEvent({type:'input'});},click(id){ids[id].dispatchEvent({type:'click'});},pageshow(){windowEvents.pageshow();}};
 }
 let p=page('planner');p.input('dehydration',8);p.input('hours',12);p.input('bolus',400);p.input('losses',5);
-assert.equal(Number(p.ids.sharedFluidRate.value),Number(expected.toFixed(2)));
-p=page('k');assert.equal(Number(p.ids.kRate.value),Number(expected.toFixed(2)));assert.equal(p.exact('kRate'),expected);assert.equal(p.ids.kRate.attrs['data-fluid-linked'],'true');
+assert.equal(Number(p.ids.sharedFluidRate.value),Number(expected.toFixed(1)));
+p=page('k');assert.equal(Number(p.ids.kRate.value),Number(expected.toFixed(1)));assert.equal(p.exact('kRate'),expected);assert.equal(p.ids.kRate.attrs['data-fluid-linked'],'true');
 p.input('kRate','25');p.input('sharedFluidRate','60');assert.equal(p.ids.kRate.value,'25');assert.match(p.ids.kRateLinkStatus.textContent,/Local override/);
-p=page('k');assert.equal(p.ids.kRate.value,'25');p.click('kRateUseShared');assert.equal(p.ids.kRate.value,'60');
-p=page('p');assert.equal(p.ids.pRate.value,'60');p.input('sharedFluidRate','80');assert.equal(p.ids.pRate.value,'80');
+p=page('k');assert.equal(p.ids.kRate.value,'25');p.click('kRateUseShared');assert.equal(p.ids.kRate.value,'60.0');
+p=page('p');assert.equal(p.ids.pRate.value,'60.0');p.input('sharedFluidRate','80');assert.equal(p.ids.pRate.value,'80.0');
 p.input('sharedFluidRate','');assert.equal(p.ids.pRate.value,'');assert.equal(p.ids.pRateUseShared.disabled,true);
 p.input('sharedFluidRate','0');assert.equal(p.ids.pRate.value,'');
-p.click('useCalculatedFluid');assert.equal(Number(p.ids.pRate.value),Number(expected.toFixed(2)));assert.equal(p.exact('pRate'),expected);
-p.input('masterWeight','10');const changed=(132*10**.75)/24+400/12+5;assert.equal(Number(p.ids.pRate.value),Number(changed.toFixed(2)));assert.equal(p.exact('pRate'),changed);
+p.click('useCalculatedFluid');assert.equal(Number(p.ids.pRate.value),Number(expected.toFixed(1)));assert.equal(p.exact('pRate'),expected);
+p.input('masterWeight','10');const changed=(132*10**.75)/24+400/12+5;assert.equal(Number(p.ids.pRate.value),Number(changed.toFixed(1)));assert.equal(p.exact('pRate'),changed);
 p=page('planner');assert.equal(p.ids.dehydration.value,'8');assert.equal(p.ids.hours.value,'12');assert.equal(p.ids.bolus.value,'400');
 p.input('sharedFluidRate','70');p.input('losses','6');assert.equal(p.ids.sharedFluidRate.value,'70');assert.match(p.ids.sharedFluidStatus.textContent,/manual/i);
 p.click('clearPatient');assert.equal(p.ids.dehydration.value,'');assert.equal(p.ids.sharedFluidRate.value,'');
@@ -55,9 +55,9 @@ console.log('Shared fluid reference passed: unrounded arithmetic, volume/duratio
 for(const [kind,id] of [['reglan','rBagPump'],['drugBag','bagRate']]){
  const planner=page('planner');planner.input('dehydration',8);planner.input('hours',12);planner.input('bolus',400);planner.input('losses',5);
  const bag=page(kind);assert.equal(bag.exact(id),expected);assert.equal(bag.ids[id+'LinkStatus'].textContent,'From Fluid Planner');
- bag.input('sharedFluidRate','40');assert.equal(bag.ids[id].value,'40');assert.equal(bag.ids[id+'LinkStatus'].textContent,'Shared manual rate');
+ bag.input('sharedFluidRate','40');assert.equal(bag.ids[id].value,'40.0');assert.equal(bag.ids[id+'LinkStatus'].textContent,'Shared manual rate');
  bag.input(id,'25');bag.input('sharedFluidRate','60');assert.equal(bag.ids[id].value,'25');assert.match(bag.ids[id+'LinkStatus'].textContent,/Local override/);
- const restored=page(kind);assert.equal(restored.ids[id].value,'25');restored.click(id+'UseShared');assert.equal(restored.ids[id].value,'60');
+ const restored=page(kind);assert.equal(restored.ids[id].value,'25');restored.click(id+'UseShared');assert.equal(restored.ids[id].value,'60.0');
  restored.click('useCalculatedFluid');assert.equal(restored.exact(id),expected);
  assert.equal(restored.ids.mPump.value,'7');assert.equal(restored.ids.prepPump.value,'3');
  restored.click('clearPatient');assert.equal(restored.ids[id].value,'');

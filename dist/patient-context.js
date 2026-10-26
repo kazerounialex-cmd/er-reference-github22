@@ -32,7 +32,11 @@ function resetPreparations(){
 
 function save(){try{sessionStorage.setItem(key,JSON.stringify(state));}catch{} }
 function emit(el){el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}
-function apply(){busy=true;try{masterWeight.value=state.weight;masterSpecies.value=state.species;
+function apply(preserveWeightEdit=false){busy=true;try{
+ // Number inputs can report "4" while the user is still typing "4.".
+ // Reassigning value here drops that decimal and moves the cursor.
+ if(!preserveWeightEdit&&masterWeight.value!==state.weight)masterWeight.value=state.weight;
+ masterSpecies.value=state.species;
  const changed=[];
  for(const el of weights){if(el.value!==state.weight){el.value=state.weight;changed.push(el);}}
  for(const el of species){const option=Array.from(el.options).find(o=>normalize(o.value)===state.species);const value=option?.value??'';if(el.value!==value){el.value=value;changed.push(el);}}
@@ -47,8 +51,8 @@ function apply(){busy=true;try{masterWeight.value=state.weight;masterSpecies.val
  $('patientSessionNote').textContent=state.weight||state.species?'Shared across pages · this browser tab only':'Shared patient · this browser tab only';
 }finally{busy=false;}
 }
-function setWeight(value){state.weight=Number.isFinite(Number(value))&&Number(value)>0?value:'';save();apply();}
-masterWeight.addEventListener('input',()=>{if(!busy)setWeight(masterWeight.value);});
+function setWeight(value,preserveEdit=false){state.weight=Number.isFinite(Number(value))&&Number(value)>0?value:'';save();apply(preserveEdit);}
+masterWeight.addEventListener('input',()=>{if(!busy)setWeight(masterWeight.value,true);});
 masterSpecies.addEventListener('change',()=>{if(!busy){state.species=masterSpecies.value;save();apply();}});
 weights.forEach(el=>el.addEventListener('input',()=>{if(!busy)setWeight(el.value);}));
 [...species,...radios].forEach(el=>el.addEventListener('change',()=>{if(busy||el.type==='radio'&&!el.checked)return;state.species=normalize(el.value);if(!state.species)state.weight='';save();apply();}));

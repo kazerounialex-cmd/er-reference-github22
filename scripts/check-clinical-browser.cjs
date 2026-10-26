@@ -11,6 +11,18 @@ const {chromium}=require('playwright');
  const go=async name=>{await page.goto(base+'/'+name);};
  const fill=async(id,value)=>page.locator('#'+id).fill(String(value));
  const text=async id=>page.locator('#'+id).innerText();
+ await go('index.html');await page.locator('#masterSpecies').selectOption('dog');
+ // Real keystrokes catch decimal/caret corruption that fill() does not exercise.
+ for(const typed of ['4.5','0.5','12.3']){
+  await fill('masterWeight','');await page.locator('#masterWeight').pressSequentially(typed);
+  assert.equal(await page.locator('#masterWeight').inputValue(),typed);
+  assert.equal(await page.locator('#weight').inputValue(),typed);
+  assert.equal(await page.locator('#masterWeight').evaluate(el=>el.checkValidity()),true);
+  const saved=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('er-reference-patient-v1')));
+  assert.equal(saved.weight,typed);
+ }
+ await go('potassium.html');assert.equal(await page.locator('#masterWeight').inputValue(),'12.3');assert.equal(await page.locator('#kWeight').inputValue(),'12.3');
+ await page.locator('#clearPatient').click();await page.waitForTimeout(30);assert.equal(await page.locator('#masterWeight').inputValue(),'');
  await go('index.html');await page.locator('#masterSpecies').selectOption('dog');await fill('masterWeight',20);
  for(const [id,value] of Object.entries({dehydration:8,hours:12,bolus:400,losses:5}))await fill(id,value);
  assert.equal(await text('sharedFluidStatus'),'From Fluid Planner');

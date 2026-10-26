@@ -43,8 +43,8 @@ if(typeof document!=='undefined')(()=>{
  const patient=()=>({weight:Number($('masterWeight').value),species:$('masterSpecies').value});
  function save(){try{sessionStorage.setItem(key,JSON.stringify(state));}catch{}}
  function emit(field){field.dispatchEvent(new Event('input',{bubbles:true}));}
- function readPlanner(){if(planner)for(const id of Object.keys(state.inputs))state.inputs[id]=$(id).value;}
- function restorePlanner(){if(!planner)return;for(const id of Object.keys(state.inputs))$(id).value=state.inputs[id];emit($('dehydration'));}
+ function readPlanner(){if(planner)for(const id of Object.keys(state.inputs))state.inputs[id]=id==='losses'&&$(id).value.trim()!==''?String(ReferenceNumbers.read($(id))):$(id).value;}
+ function restorePlanner(){if(!planner)return;for(const id of Object.keys(state.inputs)){const value=state.inputs[id];if(id==='losses'&&value.trim()!==''&&Number.isFinite(Number(value)))ReferenceNumbers.write($(id),Number(value));else $(id).value=value;}emit($('dehydration'));}
  function render(){
   const r=fluidReferenceResult(state,patient());busy=true;
   try{

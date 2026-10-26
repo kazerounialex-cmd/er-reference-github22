@@ -12,7 +12,7 @@
   catch(error){$('giEstimate').textContent=error.message;$('giApply').disabled=true;}
  }
  [...ids.map($),...document.querySelectorAll('[name=species]')].forEach(field=>field.addEventListener('input',updateEstimate));
- $('giApply').addEventListener('click',()=>{try{$('losses').value=String(estimate());$('losses').dispatchEvent(new Event('input',{bubbles:true}));}catch{updateEstimate();}});
+ $('giApply').addEventListener('click',()=>{try{ReferenceNumbers.write($('losses'),estimate());$('losses').dispatchEvent(new Event('input',{bubbles:true}));}catch{updateEstimate();}});
  $('planner').addEventListener('reset',()=>{setTimeout(()=>{$('giEpisodes').value='';$('giHours').value='';$('giPerEpisode').value='3';updateEstimate();},0);});
  updateEstimate();
 })();

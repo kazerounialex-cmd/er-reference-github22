@@ -62,3 +62,15 @@ for(const [kind,id] of [['reglan','rBagPump'],['drugBag','bagRate']]){
  assert.equal(restored.ids.mPump.value,'7');assert.equal(restored.ids.prepPump.value,'3');
  restored.click('clearPatient');assert.equal(restored.ids[id].value,'');
 }
+
+// Imported ongoing losses keep full precision across persistence/navigation.
+const numbers=require('./dist/number-format.js');
+const planner=page('planner');planner.input('dehydration',0);planner.input('bolus',0);
+numbers.write(planner.ids.losses,3/7);planner.ids.losses.dispatchEvent({type:'input'});
+assert.equal(planner.ids.losses.value,'0.43');
+assert.equal(JSON.parse(storage['er-reference-fluid-v1']).inputs.losses,String(3/7));
+const linked=page('k');assert.equal(linked.exact('kRate'),132*20**.75/24+3/7);
+const restoredPlanner=page('planner');assert.equal(restoredPlanner.ids.losses.value,'0.43');
+assert.equal(numbers.read(restoredPlanner.ids.losses),3/7);
+restoredPlanner.input('losses','');assert.equal(restoredPlanner.ids.sharedFluidRate.value,'');
+restoredPlanner.input('losses','0.5');assert.equal(numbers.read(restoredPlanner.ids.losses),0.5);
